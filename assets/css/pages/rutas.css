@@ -1,0 +1,14 @@
+.routes div a{
+    text-decoration: none;
+    color: white;
+
+}
+.routes div{
+    background-color: var(--header);
+    padding: 10px;
+    border-radius: 5px;
+}
+.routes div:last-child{
+    margin-bottom: 1rem;
+}
+

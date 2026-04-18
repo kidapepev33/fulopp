@@ -1,0 +1,24 @@
+.students-table th, .students-table td{
+    padding: 0.2rem 0.5rem ;
+}
+
+.students-table .th-photo{
+    padding-left: 2rem;
+}
+
+.th-cedula{
+}
+
+.th-seccion{
+}
+
+.th-beca{
+}
+
+.students-table .th-qr_code{
+    padding: 1rem 1.1rem;
+}
+
+.students-table .td-qr_barcode{
+    padding: 1rem 1.1rem;
+}

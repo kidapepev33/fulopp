@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/css/_extend.css">
+    <title>Gestion de transporte</title>
+</head>
+
+<body class="roboto">
+    <header id="header-container"></header>
+
+    <main class="top-margin container">
+        <div class="students-header">
+            <div>
+                <h2 class="students-title">Gestion</h2>
+                <p class="students-subtitle">Administra perfil, estudiantes, choferes y vehiculos.</p>
+            </div>
+        </div>
+
+        <div class="profile-layout">
+            <aside class="profile-sidebar table-wrapper">
+                <button class="profile-nav-link active" type="button" data-target="perfil-panel">Perfil</button>
+                <button class="profile-nav-link" type="button" data-target="estudiante-panel">Agregar Estudiante</button>
+                <button class="profile-nav-link" type="button" data-target="chofer-panel">Agregar Chofer (Cuenta)</button>
+                <button class="profile-nav-link" type="button" data-target="vehiculo-panel">Agregar Vehiculo</button>
+            </aside>
+
+            <section class="profile-content">
+                <article id="perfil-panel" class="profile-panel table-wrapper active" data-panel>
+                    <div class="panel-body">
+                        <h3 class="panel-title">Perfil</h3>
+                        <p class="panel-subtitle">Informacion de la cuenta activa y asignaciones.</p>
+
+                        <div class="profile-summary-grid">
+                            <div class="summary-card">
+                                <p class="summary-label">Chofer</p>
+                                <p id="summary-driver-name" class="summary-value">Cargando...</p>
+                            </div>
+                            <div class="summary-card">
+                                <p class="summary-label">Vehiculo asignado</p>
+                                <p id="summary-vehicle" class="summary-value">Cargando...</p>
+                            </div>
+                            <div class="summary-card">
+                                <p class="summary-label">Rutas</p>
+                                <p id="summary-routes" class="summary-value">Cargando...</p>
+                            </div>
+                        </div>
+                        <p id="profile-message" class="save-message"></p>
+                    </div>
+                </article>
+
+                <article id="estudiante-panel" class="profile-panel table-wrapper" data-panel>
+                    <form id="add-student-form" class="student-add-form" novalidate>
+                        <h3 class="panel-title">Agregar estudiante</h3>
+                        <p class="panel-subtitle">Completa los datos para crear el registro en la base de datos.</p>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="cedula">Cedula</label>
+                                <input id="cedula" name="cedula" type="text" required maxlength="32" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="nombre">Nombre</label>
+                                <input id="nombre" name="nombre" type="text" required maxlength="140" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="seccion">Seccion</label>
+                                <input id="seccion" name="seccion" type="text" required maxlength="40" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="ruta_id">Ruta</label>
+                                <select id="ruta_id" name="ruta_id" required>
+                                    <option value="">Cargando rutas...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field checkbox-field">
+                                <label for="becado">Becado</label>
+                                <input id="becado" name="becado" type="checkbox" value="1">
+                            </div>
+
+                            <div class="form-field barcode-preview-field">
+                                <label for="barcode-preview-image">Preview codigo de barras</label>
+                                <img id="barcode-preview-image" class="barcode-preview-image"
+                                    src="../assets/images/Qr_student/preview_placeholder.svg"
+                                    alt="Preview del codigo de barras">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="action-link action-button">Guardar estudiante</button>
+                            <a class="action-link" href="informe.html">Ver informe</a>
+                        </div>
+
+                        <p id="save-message" class="save-message"></p>
+                    </form>
+                </article>
+
+                <article id="chofer-panel" class="profile-panel table-wrapper" data-panel>
+                    <form id="add-driver-form" class="student-add-form" novalidate>
+                        <h3 class="panel-title">Agregar chofer</h3>
+                        <p class="panel-subtitle">Crea cuenta de chofer o administrador.</p>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="driver-nombre">Nombre</label>
+                                <input id="driver-nombre" name="nombre" type="text" required maxlength="255" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="driver-apellidos">Apellidos</label>
+                                <input id="driver-apellidos" name="apellidos" type="text" required maxlength="255" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="driver-email">Correo</label>
+                                <input id="driver-email" name="email" type="email" required maxlength="255" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="driver-password">Contrasena</label>
+                                <input id="driver-password" name="password" type="password" required minlength="6" maxlength="255">
+                            </div>
+
+                            <div class="form-field checkbox-field profile-checkbox-field">
+                                <label for="driver-admin">Cuenta administrador (sin vehiculo)</label>
+                                <input id="driver-admin" name="is_admin" type="checkbox" value="1">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="vehicle-code">Codigo interno del vehiculo</label>
+                                <input id="vehicle-code" name="codigo_interno" type="text" maxlength="80" autocomplete="off"
+                                    placeholder="Ejemplo: BUS-01">
+                            </div>
+
+                            <div class="form-field vehicle-routes-field">
+                                <label for="driver-route-1">Ruta 1</label>
+                                <select id="driver-route-1" name="ruta_ids[]">
+                                    <option value="">Selecciona ruta</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field vehicle-routes-field">
+                                <label for="driver-route-2">Ruta 2 (opcional)</label>
+                                <select id="driver-route-2" name="ruta_ids[]">
+                                    <option value="">Selecciona ruta</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="vehicle-preview">
+                            <p class="summary-label">Vehiculo seleccionado</p>
+                            <div class="vehicle-preview-grid">
+                                <div>
+                                    <p class="summary-label">Placa</p>
+                                    <p id="driver-vehicle-plate" class="summary-value">Sin seleccionar</p>
+                                </div>
+                                <div>
+                                    <p class="summary-label">Capacidad</p>
+                                    <p id="driver-vehicle-capacity" class="summary-value">Sin seleccionar</p>
+                                </div>
+                                <div>
+                                    <p class="summary-label">Estado</p>
+                                    <p id="driver-vehicle-status" class="summary-value">Sin seleccionar</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="action-link action-button">Guardar chofer</button>
+                        </div>
+                        <p id="driver-message" class="save-message"></p>
+                    </form>
+                </article>
+
+                <article id="vehiculo-panel" class="profile-panel table-wrapper" data-panel>
+                    <form id="add-vehicle-form" class="student-add-form" novalidate>
+                        <h3 class="panel-title">Agregar vehiculo</h3>
+                        <p class="panel-subtitle">Registra un nuevo vehiculo para asignarlo a choferes.</p>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="vehicle-plate">Placa</label>
+                                <input id="vehicle-plate" name="placa" type="text" required maxlength="20" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="vehicle-capacity">Capacidad</label>
+                                <input id="vehicle-capacity" name="capacidad" type="number" required min="1" max="120">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="vehicle-status">Estado</label>
+                                <input id="vehicle-status" name="estado" type="text" required maxlength="40" autocomplete="off"
+                                    placeholder="Activo / Mantenimiento">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="vehicle-route-1">Ruta 1</label>
+                                <select id="vehicle-route-1" name="ruta_ids[]" required>
+                                    <option value="">Selecciona ruta</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="vehicle-route-2">Ruta 2 (opcional)</label>
+                                <select id="vehicle-route-2" name="ruta_ids[]">
+                                    <option value="">Selecciona ruta</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="vehicle-code-internal">Codigo interno</label>
+                                <input id="vehicle-code-internal" name="codigo_interno" type="text" required maxlength="80"
+                                    autocomplete="off">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="action-link action-button">Guardar vehiculo</button>
+                        </div>
+                        <p id="vehicle-message" class="save-message"></p>
+                    </form>
+                </article>
+            </section>
+        </div>
+    </main>
+
+    <footer id="footer-container"></footer>
+
+    <script src="../assets/js/components/header.js"></script>
+    <script src="../assets/js/add_student.js"></script>
+    <script src="../assets/js/perfil.js"></script>
+</body>
+
+</html>

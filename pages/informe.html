@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/css/_extend.css">
+    <title>Tienda de Videojuegos</title>
+</head>
+
+<body class="roboto">
+    <header id="header-container"></header>
+
+  <main class="top-margin container">
+        <div class="students-header">
+            <div>
+                <h2 class="students-title">Informe de estudiantes</h2>
+                <p class="students-subtitle">Consulta global por nombre, cedula, seccion o codigo.</p>
+            </div>
+            <div class="students-search">
+                <button id="scan-barcode-button" type="button" class="action-link action-button">Escanear codigo</button>
+                <input id="students-search" type="search" placeholder="Buscar estudiante" aria-label="Buscar estudiante">
+            </div>
+        </div>
+
+        <div id="scanner-result" class="scanner-result"></div>
+
+        <div class="table-wrapper">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th class="th-photo">Foto</th>
+                        <th class="th-cedula">Cedula</th>
+                        <th class="th-nombre">Nombre</th>
+                        <th class="th-seccion">Seccion</th>
+                        <th class="th-beca">Becado</th>
+                        <th class="th-qr_code">Codigo barras</th>
+                        <th class="th-accion">Accion</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-placeholder">
+                        <td colspan="7">Cargando estudiantes...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <div id="scanner-modal" class="scanner-modal" hidden>
+        <div class="scanner-panel">
+            <div class="scanner-panel-header">
+                <h3>Escaner de codigo de barras</h3>
+                <div class="scanner-header-actions">
+                    <button id="scanner-close" type="button" class="action-link action-button">Cerrar</button>
+                </div>
+            </div>
+            <video id="scanner-video" autoplay muted playsinline></video>
+            <div id="scanner-fallback-target" class="scanner-fallback-target" hidden></div>
+            <p id="scanner-message" class="scanner-message"></p>
+        </div>
+    </div>
+
+
+    <footer id="footer-container"></footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2@1.8.4/dist/quagga.min.js"></script>
+        <script src="../assets/js/load_students_all.js"></script>
+        <script src="../assets/js/components/header.js"></script>
+</body>
+
+</html>

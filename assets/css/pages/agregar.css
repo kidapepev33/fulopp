@@ -1,0 +1,45 @@
+.student-add-form {
+    padding: 1.4rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+.checkbox-field {
+    justify-content: flex-end;
+}
+
+.checkbox-field input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    margin-top: 0.2rem;
+}
+
+.field-note {
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.barcode-preview-field {
+    grid-column: 1 / -1;
+}
+
+.barcode-preview-image {
+    width: min(100%, 520px);
+    max-height: 180px;
+    object-fit: contain;
+    border-radius: 0.7rem;
+    background: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.4rem;
+}
+
+@media (max-width: 600px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

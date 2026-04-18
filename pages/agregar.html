@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/css/_extend.css">
+    <title>Agregar Estudiante</title>
+</head>
+
+<body class="roboto">
+    <header id="header-container"></header>
+
+    <main class="top-margin container">
+        <div class="students-header">
+            <div>
+                <h2 class="students-title">Agregar estudiante</h2>
+                <p class="students-subtitle">Completa los datos para crear el registro en la base de datos.</p>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <form id="add-student-form" class="student-add-form" novalidate>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label for="cedula">Cedula</label>
+                        <input id="cedula" name="cedula" type="text" required maxlength="32" autocomplete="off">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="nombre">Nombre</label>
+                        <input id="nombre" name="nombre" type="text" required maxlength="140" autocomplete="off">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="seccion">Seccion</label>
+                        <input id="seccion" name="seccion" type="text" required maxlength="40" autocomplete="off">
+                    </div>
+
+                    <div class="form-field">
+                        <label for="ruta_id">Ruta</label>
+                        <select id="ruta_id" name="ruta_id" required>
+                            <option value="">Cargando rutas...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-field checkbox-field">
+                        <label for="becado">Becado</label>
+                        <input id="becado" name="becado" type="checkbox" value="1">
+                    </div>
+
+                    <div class="form-field barcode-preview-field">
+                        <label for="barcode-preview-image">Preview codigo de barras</label>
+                        <img
+                            id="barcode-preview-image"
+                            class="barcode-preview-image"
+                            src="../assets/images/Qr_student/preview_placeholder.svg"
+                            alt="Preview del codigo de barras"
+                        >
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="action-link action-button">Guardar estudiante</button>
+                    <a class="action-link" href="informe.html">Ver informe</a>
+                </div>
+
+                <p id="save-message" class="save-message"></p>
+            </form>
+        </div>
+    </main>
+
+    <footer id="footer-container"></footer>
+
+    <script src="../assets/js/components/header.js"></script>
+    <script src="../assets/js/add_student.js"></script>
+</body>
+
+</html>

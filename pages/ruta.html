@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../assets/css/_extend.css">
+    <title>Tienda de Videojuegos</title>
+</head>
+
+<body class="roboto">
+    <header id="header-container"></header>
+
+    <main class="top-margin container">
+        <div class="students-header">
+            <div>
+                <h2 class="students-title">Estudiantes de la ruta</h2>
+                <p class="students-subtitle">Consulta rapida por nombre o cedula.</p>
+            </div>
+            <div class="students-search">
+                <input id="students-search" type="search" placeholder="Buscar por nombre o cedula" aria-label="Buscar por nombre o cedula">
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>Foto</th>
+                        <th>Cedula</th>
+                        <th>Nombre</th>
+                        <th>Seccion</th>
+                        <th>Becado</th>
+                        <th>Codigo barras</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-placeholder">
+                        <td colspan="6">Cargando estudiantes...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+
+    <footer id="footer-container"></footer>
+    
+    <script src="../assets/js/load_students.js"></script>
+    <script src="../assets/js/components/header.js"></script>
+</body>
+
+</html>
