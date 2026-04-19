@@ -11,21 +11,31 @@
   box-shadow: 0 10px 26px rgba(56, 189, 248, 0.35);
 }
 
-.header__flex {
+.header__background {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: 1.2rem 2rem;
-  gap: 1.5rem;
+  gap: 0.5rem;
+  padding: 0.9rem 2rem 1rem;
 }
 
-.header__flex .text-aling {
-  font-weight: 700;
+.header__brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2.8rem;
+}
+
+.header__title {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.3rem, 2.2vw, 1.9rem);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
 }
 
 .logo {
-  height: 12vh;
-  max-height: 100px;
+  height: clamp(54px, 9vh, 96px);
   width: auto;
 }
 
@@ -33,6 +43,7 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
+  align-items: center;
   gap: 1.2rem;
   margin-bottom: -2.2rem;
   padding: 0 1.5rem;
@@ -56,30 +67,27 @@
   box-shadow: 0 8px 16px rgba(56, 189, 248, 0.35);
 }
 .mep{
-  height: 9vh;
-  max-height: 75px;
+  height: clamp(46px, 7.5vh, 74px);
 }
 
 @media (max-width: 900px) {
-  .header__flex {
-    padding: 1rem 1.4rem;
+  .header__background {
+    padding: 0.8rem 1.4rem 0.9rem;
   }
 
-  .logo {
-    height: 8vh;
+  .header__brand-row {
+    gap: 2rem;
   }
 
-  .mep {
-    height: 7vh;
+  .header__title {
+    font-size: clamp(1.2rem, 4vw, 1.6rem);
   }
 
   .nav__link {
-    gap: 0.8rem;
+    gap: 0.7rem;
     margin-bottom: -2rem;
-    justify-content: flex-start;
-    overflow-x: auto;
+    justify-content: center;
     padding-bottom: 0.2rem;
-    scrollbar-width: thin;
   }
 }
 
@@ -88,20 +96,33 @@
     border-bottom-width: 1.8rem;
   }
 
-  .header__flex {
-    flex-direction: column;
-    text-align: center;
-    gap: 0.8rem;
-    padding: 0.8rem 1rem;
+  .header__background {
+    padding: 0.75rem 1rem;
+  }
+
+  .header__brand-row {
+    width: 100%;
+    justify-content: space-evenly;
+    gap: 1rem;
+  }
+
+  .header__title {
+    font-size: 1.1rem;
   }
 
   .nav__link {
     margin-bottom: -1.8rem;
     gap: 0.55rem;
     padding: 0 0.8rem;
+    flex-direction: column;
+    width: min(360px, 100%);
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .nav__link a {
+    width: 100%;
+    text-align: center;
     padding: 0.55rem 0.85rem;
     font-size: 1rem;
   }

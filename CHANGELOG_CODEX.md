@@ -129,3 +129,13 @@ Proyecto: fulopp
 ## 13) Notas
 - Se validaron sintaxis PHP en endpoints nuevos/modificados durante el proceso.
 - Se preservo la estructura existente del proyecto y se extendio progresivamente.
+
+## 14) Ajustes finales de UI (2026-04-19)
+- Header mejorado para responsive:
+  - Logos en la parte superior.
+  - Titulo en una fila debajo de logos.
+  - Navegacion centrada en desktop/tablet.
+  - Navegacion en columna al bajar resolucion (mobile).
+- Tabla de informe ajustada para mantener layout horizontal en mobile:
+  - Se agrego clase `students-table--horizontal` en `pages/informe.html`.
+  - Se modificaron reglas responsive de `assets/css/pages/student.css` para que el modo vertical tipo card no aplique cuando la tabla tenga esa clase.
