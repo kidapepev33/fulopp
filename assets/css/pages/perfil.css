@@ -117,6 +117,49 @@
     opacity: 0.55;
 }
 
+.profile-panel .form-field input,
+.profile-panel .form-field select,
+.profile-panel .form-field textarea {
+    background: rgba(7, 25, 64, 0.35);
+    color: var(--white);
+}
+
+.profile-panel .form-field input[readonly] {
+    opacity: 0.85;
+}
+
+#vehicle-capacity,
+#edit-vehicle-capacity {
+    -moz-appearance: textfield;
+}
+
+#vehicle-capacity::-webkit-outer-spin-button,
+#vehicle-capacity::-webkit-inner-spin-button,
+#edit-vehicle-capacity::-webkit-outer-spin-button,
+#edit-vehicle-capacity::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.action-link.action-danger {
+    background: rgba(190, 50, 70, 0.85);
+    border-color: rgba(255, 255, 255, 0.24);
+}
+
+.action-link.action-danger:hover {
+    background: rgba(190, 50, 70, 1);
+}
+
+.profile-panel .form-field input:-webkit-autofill,
+.profile-panel .form-field input:-webkit-autofill:hover,
+.profile-panel .form-field input:-webkit-autofill:focus,
+.profile-panel .form-field textarea:-webkit-autofill,
+.profile-panel .form-field select:-webkit-autofill {
+    -webkit-text-fill-color: var(--white);
+    -webkit-box-shadow: 0 0 0 1000px rgba(7, 25, 64, 0.35) inset;
+    box-shadow: 0 0 0 1000px rgba(7, 25, 64, 0.35) inset;
+}
+
 @media (max-width: 980px) {
     .profile-layout {
         grid-template-columns: 1fr;

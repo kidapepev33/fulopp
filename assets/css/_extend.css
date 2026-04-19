@@ -2,6 +2,7 @@
 @import url(components/stylesheet.css);
 @import url(components/header.css);
 @import url(components/footer.css);
+@import url(components/toast.css);
 @import url(pages/index.css);
 @import url(pages/ruta.css);
 @import url(pages/rutas.css);

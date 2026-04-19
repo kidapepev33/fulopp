@@ -1,19 +1,5 @@
 <?php
 
-function schema_table_exists(mysqli $conn, string $tableName): bool
-{
-    $stmt = $conn->prepare(
-        "SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ? LIMIT 1"
-    );
-    if (!$stmt) {
-        return false;
-    }
-    $stmt->bind_param('s', $tableName);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    return (bool)($result && $result->fetch_row());
-}
-
 function schema_column_exists(mysqli $conn, string $tableName, string $columnName): bool
 {
     $stmt = $conn->prepare(
@@ -59,15 +45,15 @@ function ensure_profile_schema(mysqli $conn): void
     );
 
     $conn->query(
-        "CREATE TABLE IF NOT EXISTS vehiculo_rutas (
+        "CREATE TABLE IF NOT EXISTS chofer_rutas (
             id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-            vehiculo_id INT UNSIGNED NOT NULL,
+            chofer_id INT(255) NOT NULL,
             ruta_id INT(11) NOT NULL,
             PRIMARY KEY (id),
-            UNIQUE KEY uq_vehiculo_ruta (vehiculo_id, ruta_id),
-            KEY idx_vehiculo_ruta_ruta (ruta_id),
-            CONSTRAINT fk_vehiculo_ruta_vehiculo FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id) ON DELETE CASCADE,
-            CONSTRAINT fk_vehiculo_ruta_ruta FOREIGN KEY (ruta_id) REFERENCES rutas(id) ON DELETE CASCADE
+            UNIQUE KEY uq_chofer_ruta (chofer_id, ruta_id),
+            KEY idx_chofer_ruta_ruta (ruta_id),
+            CONSTRAINT fk_chofer_ruta_chofer FOREIGN KEY (chofer_id) REFERENCES chofer(id) ON DELETE CASCADE,
+            CONSTRAINT fk_chofer_ruta_ruta FOREIGN KEY (ruta_id) REFERENCES rutas(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
     );
 
@@ -88,4 +74,3 @@ function ensure_profile_schema(mysqli $conn): void
         $conn->query("ALTER TABLE chofer ADD CONSTRAINT fk_chofer_vehiculo FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id) ON DELETE SET NULL");
     }
 }
-

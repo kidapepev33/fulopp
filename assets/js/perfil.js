@@ -1,16 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
     const sidebarLinks = Array.from(document.querySelectorAll(".profile-nav-link"));
     const panels = Array.from(document.querySelectorAll("[data-panel]"));
+    const adminOnlyLinks = Array.from(document.querySelectorAll(".profile-nav-link[data-admin-only='1']"));
+    const adminOnlyPanels = Array.from(document.querySelectorAll("[data-panel][data-admin-only='1']"));
 
     const profileMessage = document.getElementById("profile-message");
     const summaryDriverName = document.getElementById("summary-driver-name");
     const summaryVehicle = document.getElementById("summary-vehicle");
     const summaryRoutes = document.getElementById("summary-routes");
+    const summaryEmail = document.getElementById("summary-email");
 
     const driverForm = document.getElementById("add-driver-form");
     const driverMessage = document.getElementById("driver-message");
     const driverAdminCheckbox = document.getElementById("driver-admin");
-    const vehicleCodeInput = document.getElementById("vehicle-code");
+    const vehicleCodeSelect = document.getElementById("vehicle-code");
     const driverRoute1 = document.getElementById("driver-route-1");
     const driverRoute2 = document.getElementById("driver-route-2");
     const previewPlate = document.getElementById("driver-vehicle-plate");
@@ -19,52 +22,96 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const vehicleForm = document.getElementById("add-vehicle-form");
     const vehicleMessage = document.getElementById("vehicle-message");
-    const vehicleRoute1 = document.getElementById("vehicle-route-1");
-    const vehicleRoute2 = document.getElementById("vehicle-route-2");
+
+    const editDriverForm = document.getElementById("edit-driver-form");
+    const editDriverSelect = document.getElementById("edit-driver-select");
+    const editDriverName = document.getElementById("edit-driver-name");
+    const editDriverEmail = document.getElementById("edit-driver-email");
+    const editDriverVehicle = document.getElementById("edit-driver-vehicle");
+    const editDriverRoute1 = document.getElementById("edit-driver-route-1");
+    const editDriverRoute2 = document.getElementById("edit-driver-route-2");
+    const editVehiclePlate = document.getElementById("edit-driver-vehicle-plate");
+    const editVehicleCapacity = document.getElementById("edit-driver-vehicle-capacity");
+    const editVehicleStatus = document.getElementById("edit-driver-vehicle-status");
+    const editDriverMessage = document.getElementById("edit-driver-message");
+    const deleteDriverButton = document.getElementById("delete-driver-button");
+
+    const editVehicleForm = document.getElementById("edit-vehicle-form");
+    const editVehicleSelect = document.getElementById("edit-vehicle-select");
+    const editVehicleCode = document.getElementById("edit-vehicle-code");
+    const editVehiclePlateInput = document.getElementById("edit-vehicle-plate");
+    const editVehicleCapacityInput = document.getElementById("edit-vehicle-capacity");
+    const editVehicleStatusSelect = document.getElementById("edit-vehicle-status");
+    const editVehicleMessage = document.getElementById("edit-vehicle-message");
+    const vehiclesTableBody = document.getElementById("vehicles-table-body");
+    const toast = window.AppToast;
 
     let latestData = {
         routes: [],
-        vehicles: []
+        vehicles: [],
+        drivers: []
     };
 
     const setMessage = (element, text, type) => {
-        if (!element) {
+        if (!text) return;
+        if (!toast) {
+            if (element) {
+                element.textContent = text;
+                element.className = "save-message" + (type ? " " + type : "");
+            }
             return;
         }
-        element.textContent = text || "";
-        element.className = "save-message" + (type ? " " + type : "");
+        const kind = type || "info";
+        if (kind === "success") toast.success(text);
+        else if (kind === "error") toast.error(text);
+        else if (kind === "warning") toast.warning(text);
+        else toast.info(text);
     };
 
-    const setVehiclePreview = vehicle => {
-        if (!previewPlate || !previewCapacity || !previewStatus) {
-            return;
-        }
+    const normalizeState = value => String(value || "").trim().toLowerCase();
+    const isMaintenance = value => normalizeState(value) === "mantenimiento";
+
+    const setVehiclePreview = (vehicle, targets) => {
+        const plateEl = targets.plate;
+        const capacityEl = targets.capacity;
+        const statusEl = targets.status;
+        if (!plateEl || !capacityEl || !statusEl) return;
 
         if (!vehicle) {
-            previewPlate.textContent = "Sin seleccionar";
-            previewCapacity.textContent = "Sin seleccionar";
-            previewStatus.textContent = "Sin seleccionar";
+            plateEl.textContent = "Sin seleccionar";
+            capacityEl.textContent = "Sin seleccionar";
+            statusEl.textContent = "Sin seleccionar";
             return;
         }
 
-        previewPlate.textContent = vehicle.placa || "Sin placa";
-        previewCapacity.textContent = String(vehicle.capacidad || "Sin capacidad");
-        previewStatus.textContent = vehicle.estado || "Sin estado";
+        plateEl.textContent = vehicle.placa || "Sin placa";
+        capacityEl.textContent = String(vehicle.capacidad || "Sin capacidad");
+        statusEl.textContent = vehicle.estado || "Sin estado";
+    };
+
+    const findVehicleByCode = code => {
+        const targetCode = String(code || "").trim().toUpperCase();
+        if (!targetCode) return null;
+        return latestData.vehicles.find(vehicle =>
+            String(vehicle.codigo_interno || "").trim().toUpperCase() === targetCode
+        ) || null;
+    };
+
+    const findVehicleById = id => {
+        const targetId = Number(id || 0);
+        if (!targetId) return null;
+        return latestData.vehicles.find(vehicle => Number(vehicle.id || 0) === targetId) || null;
     };
 
     const populateRouteSelect = (select, routes, placeholder, selectedId) => {
-        if (!select) {
-            return;
-        }
+        if (!select) return;
         const currentValue = selectedId || select.value || "";
         const options = ['<option value="">' + placeholder + "</option>"];
 
         routes.forEach(route => {
             const routeId = String(route.id || "").trim();
             const routeName = String(route.nombre || routeId).trim();
-            if (routeId === "") {
-                return;
-            }
+            if (!routeId) return;
             const selected = routeId === String(currentValue) ? " selected" : "";
             options.push('<option value="' + routeId + '"' + selected + ">" + routeName + "</option>");
         });
@@ -72,10 +119,147 @@ document.addEventListener("DOMContentLoaded", () => {
         select.innerHTML = options.join("");
     };
 
+    const populateVehicleSelectByCode = selectedCode => {
+        if (!vehicleCodeSelect) return;
+        const currentCode = String(selectedCode || vehicleCodeSelect.value || "").trim().toUpperCase();
+        const options = ['<option value="">Selecciona vehiculo disponible</option>'];
+
+        latestData.vehicles.forEach(vehicle => {
+            const vehicleCode = String(vehicle.codigo_interno || "").trim();
+            const assignedDriverId = Number(vehicle.assigned_driver_id || 0);
+            if (!vehicleCode) return;
+            if (isMaintenance(vehicle.estado)) return;
+            if (assignedDriverId > 0 && vehicleCode.toUpperCase() !== currentCode) return;
+
+            const selected = vehicleCode.toUpperCase() === currentCode ? " selected" : "";
+            options.push('<option value="' + vehicleCode + '"' + selected + ">" + vehicleCode + "</option>");
+        });
+
+        vehicleCodeSelect.innerHTML = options.join("");
+    };
+
+    const populateDriversSelect = selectedId => {
+        if (!editDriverSelect) return;
+        const currentId = String(selectedId || editDriverSelect.value || "");
+        const options = ['<option value="">Selecciona chofer</option>'];
+        latestData.drivers.forEach(driver => {
+            const driverId = String(driver.id || "");
+            if (!driverId) return;
+            const fullName = [driver.nombre, driver.apellidos].filter(Boolean).join(" ").trim() || ("Chofer #" + driverId);
+            const selected = driverId === currentId ? " selected" : "";
+            options.push('<option value="' + driverId + '"' + selected + ">" + fullName + "</option>");
+        });
+        editDriverSelect.innerHTML = options.join("");
+    };
+
+    const populateVehicleSelectById = (select, selectedVehicleId, currentDriverId) => {
+        if (!select) return;
+        const selectedId = Number(selectedVehicleId || 0);
+        const driverId = Number(currentDriverId || 0);
+        const options = ['<option value="">Sin vehiculo asignado</option>'];
+
+        latestData.vehicles.forEach(vehicle => {
+            const vehicleId = Number(vehicle.id || 0);
+            const assignedDriverId = Number(vehicle.assigned_driver_id || 0);
+            if (!vehicleId) return;
+            if (isMaintenance(vehicle.estado)) return;
+
+            if (assignedDriverId > 0 && assignedDriverId !== driverId && vehicleId !== selectedId) {
+                return;
+            }
+
+            const label = [vehicle.codigo_interno, vehicle.placa].filter(Boolean).join(" - ");
+            const selected = vehicleId === selectedId ? " selected" : "";
+            options.push('<option value="' + vehicleId + '"' + selected + ">" + label + "</option>");
+        });
+
+        select.innerHTML = options.join("");
+    };
+
+    const getDriverById = driverId => {
+        const target = Number(driverId || 0);
+        if (!target) return null;
+        return latestData.drivers.find(driver => Number(driver.id || 0) === target) || null;
+    };
+
+    const populateEditVehicleSelect = selectedId => {
+        if (!editVehicleSelect) return;
+        const currentId = String(selectedId || editVehicleSelect.value || "");
+        const options = ['<option value="">Selecciona vehiculo</option>'];
+        latestData.vehicles.forEach(vehicle => {
+            const vehicleId = String(vehicle.id || "");
+            if (!vehicleId) return;
+            const label = [vehicle.codigo_interno, vehicle.placa].filter(Boolean).join(" - ");
+            const selected = vehicleId === currentId ? " selected" : "";
+            options.push('<option value="' + vehicleId + '"' + selected + ">" + label + "</option>");
+        });
+        editVehicleSelect.innerHTML = options.join("");
+    };
+
+    const renderVehiclesList = () => {
+        if (!vehiclesTableBody) return;
+        if (!Array.isArray(latestData.vehicles) || latestData.vehicles.length === 0) {
+            vehiclesTableBody.innerHTML = '<tr class="table-placeholder"><td colspan="6">No hay vehiculos registrados</td></tr>';
+            return;
+        }
+
+        const safe = value => String(value === null || value === undefined || value === "" ? "-" : value)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+
+        vehiclesTableBody.innerHTML = latestData.vehicles.map(vehicle => {
+            const assigned = String(vehicle.assigned_driver_name || "").trim();
+            const status = isMaintenance(vehicle.estado) ? "Mantenimiento" : "Activo";
+            return `
+                <tr>
+                    <td data-label="Codigo interno">${safe(vehicle.codigo_interno)}</td>
+                    <td data-label="Placa">${safe(vehicle.placa)}</td>
+                    <td data-label="Capacidad">${safe(vehicle.capacidad)}</td>
+                    <td data-label="Estado">${safe(status)}</td>
+                    <td data-label="Chofer asignado">${safe(assigned || "Sin asignar")}</td>
+                    <td data-label="Accion">
+                        <button type="button" class="action-link action-button edit-vehicle-go" data-vehicle-id="${safe(vehicle.id)}">Editar</button>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+        vehiclesTableBody.querySelectorAll(".edit-vehicle-go").forEach(button => {
+            button.addEventListener("click", () => {
+                const vehicleId = String(button.dataset.vehicleId || "");
+                activatePanel("editar-vehiculo-panel");
+                if (editVehicleSelect) {
+                    editVehicleSelect.value = vehicleId;
+                }
+                loadEditVehicleData();
+            });
+        });
+    };
+
+    const loadEditVehicleData = () => {
+        if (!editVehicleSelect) return null;
+        const vehicle = findVehicleById(editVehicleSelect.value);
+        if (!vehicle) {
+            if (editVehicleCode) editVehicleCode.value = "";
+            if (editVehiclePlateInput) editVehiclePlateInput.value = "";
+            if (editVehicleCapacityInput) editVehicleCapacityInput.value = "";
+            if (editVehicleStatusSelect) editVehicleStatusSelect.value = "activo";
+            return null;
+        }
+
+        if (editVehicleCode) editVehicleCode.value = vehicle.codigo_interno || "";
+        if (editVehiclePlateInput) editVehiclePlateInput.value = vehicle.placa || "";
+        if (editVehicleCapacityInput) editVehicleCapacityInput.value = String(vehicle.capacidad || "");
+        if (editVehicleStatusSelect) editVehicleStatusSelect.value = isMaintenance(vehicle.estado) ? "mantenimiento" : "activo";
+        return vehicle;
+    };
+
     const activatePanel = targetId => {
         sidebarLinks.forEach(link => {
-            const active = link.dataset.target === targetId;
-            link.classList.toggle("active", active);
+            link.classList.toggle("active", link.dataset.target === targetId);
         });
 
         panels.forEach(panel => {
@@ -84,40 +268,65 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const validateDifferentRoutes = (first, second) => {
-        if (!first || !second) {
-            return true;
-        }
-        if (!first.value || !second.value) {
-            return true;
-        }
+        if (!first || !second) return true;
+        if (!first.value || !second.value) return true;
         return first.value !== second.value;
     };
 
     const loadVehicleByCode = () => {
-        if (!vehicleCodeInput) {
-            return Promise.resolve(null);
-        }
-
-        const code = (vehicleCodeInput.value || "").trim();
+        if (!vehicleCodeSelect) return Promise.resolve(null);
+        const code = (vehicleCodeSelect.value || "").trim();
         if (!code) {
-            setVehiclePreview(null);
+            setVehiclePreview(null, { plate: previewPlate, capacity: previewCapacity, status: previewStatus });
             return Promise.resolve(null);
         }
 
-        return fetch("../includes/functions/get_vehicle_by_code.php?codigo_interno=" + encodeURIComponent(code))
-            .then(res => res.json())
-            .then(result => {
-                if (!result || !result.success || !result.vehicle) {
-                    setVehiclePreview(null);
-                    throw new Error(result && result.message ? result.message : "Vehiculo no encontrado");
-                }
-                setVehiclePreview(result.vehicle);
-                return result.vehicle;
-            });
+        const vehicle = findVehicleByCode(code);
+        if (!vehicle) {
+            setVehiclePreview(null, { plate: previewPlate, capacity: previewCapacity, status: previewStatus });
+            return Promise.reject(new Error("Vehiculo no encontrado"));
+        }
+        if (isMaintenance(vehicle.estado)) {
+            setVehiclePreview(null, { plate: previewPlate, capacity: previewCapacity, status: previewStatus });
+            return Promise.reject(new Error("No puedes asignar un vehiculo en mantenimiento"));
+        }
+
+        setVehiclePreview(vehicle, { plate: previewPlate, capacity: previewCapacity, status: previewStatus });
+        return Promise.resolve(vehicle);
+    };
+
+    const loadEditDriverData = () => {
+        if (!editDriverSelect) return;
+        const driver = getDriverById(editDriverSelect.value);
+        if (!driver) {
+            if (editDriverName) editDriverName.value = "";
+            if (editDriverEmail) editDriverEmail.value = "";
+            populateVehicleSelectById(editDriverVehicle, "", "");
+            populateRouteSelect(editDriverRoute1, latestData.routes, "Selecciona ruta", "");
+            populateRouteSelect(editDriverRoute2, latestData.routes, "Selecciona ruta", "");
+            setVehiclePreview(null, { plate: editVehiclePlate, capacity: editVehicleCapacity, status: editVehicleStatus });
+            return;
+        }
+
+        const fullName = [driver.nombre, driver.apellidos].filter(Boolean).join(" ").trim();
+        if (editDriverName) editDriverName.value = fullName;
+        if (editDriverEmail) editDriverEmail.value = driver.email || "";
+
+        const currentVehicleId = Number(driver.vehiculo_id || 0);
+        populateVehicleSelectById(editDriverVehicle, currentVehicleId, driver.id);
+
+        const routes = Array.isArray(driver.routes) ? driver.routes : [];
+        const route1 = routes[0] ? String(routes[0].id) : "";
+        const route2 = routes[1] ? String(routes[1].id) : "";
+
+        populateRouteSelect(editDriverRoute1, latestData.routes, "Selecciona ruta", route1);
+        populateRouteSelect(editDriverRoute2, latestData.routes, "Selecciona ruta", route2);
+
+        const vehicle = findVehicleById(currentVehicleId);
+        setVehiclePreview(vehicle, { plate: editVehiclePlate, capacity: editVehicleCapacity, status: editVehicleStatus });
     };
 
     const refreshProfileData = () => {
-        setMessage(profileMessage, "Cargando informacion de perfil...", "");
         return fetch("../includes/functions/get_profile_data.php")
             .then(res => res.json())
             .then(result => {
@@ -127,10 +336,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 latestData.routes = Array.isArray(result.routes) ? result.routes : [];
                 latestData.vehicles = Array.isArray(result.vehicles) ? result.vehicles : [];
+                latestData.drivers = Array.isArray(result.drivers) ? result.drivers : [];
 
                 const profile = result.profile || {};
                 const name = [profile.nombre, profile.apellidos].filter(Boolean).join(" ").trim();
                 summaryDriverName.textContent = name || "Cuenta sin nombre";
+                if (summaryEmail) {
+                    summaryEmail.textContent = profile.email || "Sin correo";
+                }
+                const isAdmin = String(profile.rol || "").toLowerCase() === "admin";
+
+                adminOnlyLinks.forEach(link => { link.style.display = isAdmin ? "" : "none"; });
+                adminOnlyPanels.forEach(panel => { panel.style.display = isAdmin ? "" : "none"; });
+                if (!isAdmin) {
+                    sidebarLinks.forEach(link => {
+                        if (link.dataset.target !== "perfil-panel") {
+                            link.style.display = "none";
+                        }
+                    });
+                    panels.forEach(panel => {
+                        if (panel.id !== "perfil-panel") {
+                            panel.style.display = "none";
+                        }
+                    });
+                } else {
+                    sidebarLinks.forEach(link => {
+                        if (link.dataset.adminOnly !== "1") {
+                            link.style.display = "";
+                        }
+                    });
+                    panels.forEach(panel => {
+                        if (panel.dataset.adminOnly !== "1") {
+                            panel.style.display = "";
+                        }
+                    });
+                }
+
+                const activeLink = document.querySelector(".profile-nav-link.active");
+                if (!isAdmin && activeLink && activeLink.dataset.adminOnly === "1") {
+                    activatePanel("perfil-panel");
+                }
 
                 if (profile.vehiculo_id && profile.codigo_interno) {
                     summaryVehicle.textContent = profile.codigo_interno + " - " + (profile.placa || "Sin placa");
@@ -139,18 +384,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 const assignedRoutes = Array.isArray(result.assigned_routes) ? result.assigned_routes : [];
-                if (assignedRoutes.length === 0) {
-                    summaryRoutes.textContent = "No tiene rutas asignadas";
-                } else {
-                    summaryRoutes.textContent = assignedRoutes.map(route => route.nombre).join(", ");
-                }
+                summaryRoutes.textContent = assignedRoutes.length === 0
+                    ? "No tiene rutas asignadas"
+                    : assignedRoutes.map(route => route.nombre).join(", ");
 
-                populateRouteSelect(driverRoute1, latestData.routes, "Selecciona ruta", driverRoute1.value);
-                populateRouteSelect(driverRoute2, latestData.routes, "Selecciona ruta", driverRoute2.value);
-                populateRouteSelect(vehicleRoute1, latestData.routes, "Selecciona ruta", vehicleRoute1.value);
-                populateRouteSelect(vehicleRoute2, latestData.routes, "Selecciona ruta", vehicleRoute2.value);
+                populateRouteSelect(driverRoute1, latestData.routes, "Selecciona ruta", driverRoute1 ? driverRoute1.value : "");
+                populateRouteSelect(driverRoute2, latestData.routes, "Selecciona ruta", driverRoute2 ? driverRoute2.value : "");
+                populateVehicleSelectByCode(vehicleCodeSelect ? vehicleCodeSelect.value : "");
 
-                setMessage(profileMessage, "Perfil actualizado.", "success");
+                populateDriversSelect(editDriverSelect ? editDriverSelect.value : "");
+                loadEditDriverData();
+                populateEditVehicleSelect(editVehicleSelect ? editVehicleSelect.value : "");
+                loadEditVehicleData();
+                renderVehiclesList();
+
+                // no toast on every refresh to avoid noise
             })
             .catch(error => {
                 setMessage(profileMessage, error.message || "No se pudo cargar informacion de perfil.", "error");
@@ -158,35 +406,30 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const updateDriverMode = () => {
-        if (!driverForm || !driverAdminCheckbox || !vehicleCodeInput || !driverRoute1 || !driverRoute2) {
-            return;
-        }
+        if (!driverForm || !driverAdminCheckbox || !vehicleCodeSelect || !driverRoute1 || !driverRoute2) return;
 
         const isAdmin = !!driverAdminCheckbox.checked;
         driverForm.classList.toggle("is-admin", isAdmin);
-
-        vehicleCodeInput.required = !isAdmin;
+        vehicleCodeSelect.required = !isAdmin;
         driverRoute1.required = !isAdmin;
 
         if (isAdmin) {
-            vehicleCodeInput.value = "";
+            vehicleCodeSelect.value = "";
             driverRoute1.value = "";
             driverRoute2.value = "";
-            setVehiclePreview(null);
+            setVehiclePreview(null, { plate: previewPlate, capacity: previewCapacity, status: previewStatus });
         }
     };
 
     sidebarLinks.forEach(link => {
         link.addEventListener("click", () => {
             const target = link.dataset.target;
-            if (target) {
-                activatePanel(target);
-            }
+            if (target) activatePanel(target);
         });
     });
 
-    if (vehicleCodeInput) {
-        vehicleCodeInput.addEventListener("blur", () => {
+    if (vehicleCodeSelect) {
+        vehicleCodeSelect.addEventListener("change", () => {
             loadVehicleByCode().catch(error => {
                 setMessage(driverMessage, error.message || "No se encontro vehiculo.", "error");
             });
@@ -205,18 +448,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 setMessage(driverMessage, "No puedes seleccionar la misma ruta dos veces.", "error");
                 return;
             }
-
-            if (!driverForm.reportValidity()) {
-                return;
-            }
-
-            setMessage(driverMessage, "Guardando cuenta de chofer...", "");
+            if (!driverForm.reportValidity()) return;
 
             loadVehicleByCode()
                 .catch(() => null)
                 .then(vehicle => {
                     if (!driverAdminCheckbox.checked && !vehicle) {
-                        throw new Error("Debes indicar un codigo interno de vehiculo valido.");
+                        throw new Error("Debes seleccionar un vehiculo valido.");
                     }
 
                     const formData = new FormData(driverForm);
@@ -232,11 +470,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!result || !result.success) {
                         throw new Error(result && result.message ? result.message : "No se pudo crear la cuenta");
                     }
-
                     setMessage(driverMessage, "Cuenta creada correctamente.", "success");
                     driverForm.reset();
                     updateDriverMode();
-                    setVehiclePreview(null);
+                    setVehiclePreview(null, { plate: previewPlate, capacity: previewCapacity, status: previewStatus });
                     return refreshProfileData();
                 })
                 .catch(error => {
@@ -248,17 +485,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (vehicleForm) {
         vehicleForm.addEventListener("submit", event => {
             event.preventDefault();
+            if (!vehicleForm.reportValidity()) return;
 
-            if (!validateDifferentRoutes(vehicleRoute1, vehicleRoute2)) {
-                setMessage(vehicleMessage, "No puedes seleccionar la misma ruta dos veces.", "error");
-                return;
-            }
-
-            if (!vehicleForm.reportValidity()) {
-                return;
-            }
-
-            setMessage(vehicleMessage, "Guardando vehiculo...", "");
             const formData = new FormData(vehicleForm);
 
             fetch("../includes/functions/create_vehicle.php", {
@@ -270,7 +498,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!result || !result.success) {
                         throw new Error(result && result.message ? result.message : "No se pudo guardar vehiculo");
                     }
-
                     setMessage(vehicleMessage, "Vehiculo guardado correctamente.", "success");
                     vehicleForm.reset();
                     return refreshProfileData();
@@ -281,8 +508,161 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    if (editDriverSelect) {
+        editDriverSelect.addEventListener("change", () => {
+            loadEditDriverData();
+        });
+    }
+
+    if (editDriverVehicle) {
+        editDriverVehicle.addEventListener("change", () => {
+            const vehicle = findVehicleById(editDriverVehicle.value);
+            setVehiclePreview(vehicle, { plate: editVehiclePlate, capacity: editVehicleCapacity, status: editVehicleStatus });
+        });
+    }
+
+    if (editDriverForm) {
+        editDriverForm.addEventListener("submit", event => {
+            event.preventDefault();
+
+            const driverId = editDriverSelect ? editDriverSelect.value : "";
+            if (!driverId) {
+                setMessage(editDriverMessage, "Selecciona un chofer para editar.", "error");
+                return;
+            }
+
+            if (!validateDifferentRoutes(editDriverRoute1, editDriverRoute2)) {
+                setMessage(editDriverMessage, "No puedes seleccionar la misma ruta dos veces.", "error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.set("driver_id", driverId);
+            formData.set("vehiculo_id", editDriverVehicle ? String(editDriverVehicle.value || "") : "");
+            if (editDriverRoute1) formData.append("ruta_ids[]", String(editDriverRoute1.value || ""));
+            if (editDriverRoute2) formData.append("ruta_ids[]", String(editDriverRoute2.value || ""));
+
+            fetch("../includes/functions/update_driver_account.php", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (!result || !result.success) {
+                        throw new Error(result && result.message ? result.message : "No se pudo actualizar");
+                    }
+                    setMessage(editDriverMessage, "Chofer actualizado correctamente.", "success");
+                    return refreshProfileData();
+                })
+                .catch(error => {
+                    setMessage(editDriverMessage, error.message || "Error actualizando chofer.", "error");
+                });
+        });
+    }
+
+    if (deleteDriverButton) {
+        deleteDriverButton.addEventListener("click", () => {
+            const driverId = editDriverSelect ? editDriverSelect.value : "";
+            if (!driverId) {
+                setMessage(editDriverMessage, "Selecciona un chofer para borrar.", "error");
+                return;
+            }
+
+            const doDelete = confirmed => {
+                if (!confirmed) return;
+
+                const formData = new FormData();
+                formData.set("driver_id", driverId);
+
+                fetch("../includes/functions/delete_driver_account.php", {
+                    method: "POST",
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(result => {
+                        if (!result || !result.success) {
+                            throw new Error(result && result.message ? result.message : "No se pudo borrar la cuenta");
+                        }
+
+                        if (editDriverSelect) editDriverSelect.value = "";
+                        setMessage(editDriverMessage, "Cuenta eliminada correctamente.", "success");
+                        return refreshProfileData();
+                    })
+                    .catch(error => {
+                        setMessage(editDriverMessage, error.message || "Error borrando cuenta.", "error");
+                    });
+            };
+
+            if (toast && typeof toast.confirm === "function") {
+                toast.confirm("Esta accion eliminara la cuenta del chofer seleccionado. Deseas continuar?", {
+                    type: "warning",
+                    confirmText: "Borrar",
+                    cancelText: "Cancelar"
+                }).then(doDelete);
+            } else {
+                doDelete(true);
+            }
+        });
+    }
+
+    if (editVehicleSelect) {
+        editVehicleSelect.addEventListener("change", () => {
+            loadEditVehicleData();
+        });
+    }
+
+    if (editVehicleForm) {
+        editVehicleForm.addEventListener("submit", event => {
+            event.preventDefault();
+            if (!editVehicleForm.reportValidity()) return;
+
+            const vehicleId = editVehicleSelect ? String(editVehicleSelect.value || "") : "";
+            if (!vehicleId) {
+                setMessage(editVehicleMessage, "Selecciona un vehiculo para editar.", "error");
+                return;
+            }
+
+            const currentVehicle = findVehicleById(vehicleId);
+            const nextState = editVehicleStatusSelect ? String(editVehicleStatusSelect.value || "activo") : "activo";
+            const hasAssignedDriver = currentVehicle && Number(currentVehicle.assigned_driver_id || 0) > 0;
+
+            if (nextState === "mantenimiento" && hasAssignedDriver && !isMaintenance(currentVehicle.estado)) {
+                const driverName = String(currentVehicle.assigned_driver_name || "").trim() || "el chofer asignado";
+                setMessage(editVehicleMessage, "Este vehiculo pasara a mantenimiento y se desasignara de " + driverName + ".", "warning");
+            }
+
+            const formData = new FormData();
+            formData.set("vehicle_id", vehicleId);
+            formData.set("placa", editVehiclePlateInput ? String(editVehiclePlateInput.value || "") : "");
+            formData.set("capacidad", editVehicleCapacityInput ? String(editVehicleCapacityInput.value || "") : "");
+            formData.set("estado", nextState);
+
+            fetch("../includes/functions/update_vehicle.php", {
+                method: "POST",
+                body: formData
+            })
+                .then(res => res.json())
+                .then(result => {
+                    if (!result || !result.success) {
+                        throw new Error(result && result.message ? result.message : "No se pudo actualizar el vehiculo");
+                    }
+
+                    setMessage(editVehicleMessage, "Vehiculo actualizado correctamente.", "success");
+
+                    if (result.unassigned_driver) {
+                        const name = result.unassigned_driver_name ? (" de " + result.unassigned_driver_name) : "";
+                        setMessage(editVehicleMessage, "Vehiculo desasignado" + name + " por mantenimiento.", "warning");
+                    }
+
+                    return refreshProfileData();
+                })
+                .catch(error => {
+                    setMessage(editVehicleMessage, error.message || "Error actualizando vehiculo.", "error");
+                });
+        });
+    }
+
     activatePanel("perfil-panel");
     updateDriverMode();
     refreshProfileData();
 });
-

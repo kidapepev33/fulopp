@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../../config/server.php';
-require_once 'profile_schema.php';
+require_once 'auth_scope.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -9,34 +9,23 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (!isset($_SESSION['auth_user']) || !is_array($_SESSION['auth_user'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Sesion no valida']);
+$authUser = require_auth_user();
+$scope = get_user_scope($conn, intval($authUser['id'] ?? 0));
+
+if ($scope['role'] !== 'admin') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Solo administradores pueden crear vehiculos']);
     exit;
 }
-
-ensure_profile_schema($conn);
 
 $placa = strtoupper(trim($_POST['placa'] ?? ''));
 $capacidad = intval($_POST['capacidad'] ?? 0);
-$estado = trim($_POST['estado'] ?? '');
+$estadoRaw = strtolower(trim($_POST['estado'] ?? ''));
+$estado = $estadoRaw === 'mantenimiento' ? 'mantenimiento' : 'activo';
 $codigoInterno = strtoupper(trim($_POST['codigo_interno'] ?? ''));
 
-$rutaIds = $_POST['ruta_ids'] ?? [];
-if (!is_array($rutaIds)) {
-    $rutaIds = [];
-}
-$rutaIds = array_values(array_unique(array_filter(array_map('intval', $rutaIds), function ($value) {
-    return $value > 0;
-})));
-
-if ($placa === '' || $capacidad <= 0 || $estado === '' || $codigoInterno === '') {
+if ($placa === '' || $capacidad <= 0 || $codigoInterno === '') {
     echo json_encode(['success' => false, 'message' => 'Completa todos los campos obligatorios']);
-    exit;
-}
-
-if (count($rutaIds) < 1 || count($rutaIds) > 2) {
-    echo json_encode(['success' => false, 'message' => 'Debes asignar 1 o 2 rutas al vehiculo']);
     exit;
 }
 
@@ -47,22 +36,6 @@ if ($checkStmt) {
     $checkResult = $checkStmt->get_result();
     if ($checkResult && $checkResult->fetch_assoc()) {
         echo json_encode(['success' => false, 'message' => 'La placa o el codigo interno ya existen']);
-        exit;
-    }
-}
-
-$routeStmt = $conn->prepare("SELECT id FROM rutas WHERE id = ? LIMIT 1");
-if (!$routeStmt) {
-    echo json_encode(['success' => false, 'message' => 'No se pudo validar rutas']);
-    exit;
-}
-
-foreach ($rutaIds as $rutaId) {
-    $routeStmt->bind_param('i', $rutaId);
-    $routeStmt->execute();
-    $routeResult = $routeStmt->get_result();
-    if (!$routeResult || !$routeResult->fetch_assoc()) {
-        echo json_encode(['success' => false, 'message' => 'Una de las rutas no existe']);
         exit;
     }
 }
@@ -85,18 +58,6 @@ try {
     $vehiculoId = intval($conn->insert_id);
     if ($vehiculoId <= 0) {
         throw new Exception('No se pudo obtener el ID del vehiculo');
-    }
-
-    $insertRouteStmt = $conn->prepare("INSERT INTO vehiculo_rutas (vehiculo_id, ruta_id) VALUES (?, ?)");
-    if (!$insertRouteStmt) {
-        throw new Exception('No se pudo preparar rutas de vehiculo');
-    }
-
-    foreach ($rutaIds as $rutaId) {
-        $insertRouteStmt->bind_param('ii', $vehiculoId, $rutaId);
-        if (!$insertRouteStmt->execute()) {
-            throw new Exception('No se pudo asignar una ruta al vehiculo');
-        }
     }
 
     $conn->commit();

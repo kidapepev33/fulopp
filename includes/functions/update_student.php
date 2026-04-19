@@ -1,6 +1,10 @@
 <?php
 require_once '../../config/server.php';
+require_once 'auth_scope.php';
 header('Content-Type: application/json; charset=utf-8');
+
+$authUser = require_auth_user();
+$scope = get_user_scope($conn, intval($authUser['id'] ?? 0));
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     echo json_encode(['success' => false, 'message' => 'Metodo no permitido']);
@@ -13,6 +17,26 @@ if (!isset($_POST['id'])) {
 }
 
 $id = intval($_POST['id']);
+
+$currentRouteStmt = $conn->prepare("SELECT ruta_id FROM estudiantes WHERE id = ? LIMIT 1");
+if (!$currentRouteStmt) {
+    echo json_encode(['success' => false, 'message' => 'No se pudo validar estudiante']);
+    exit;
+}
+$currentRouteStmt->bind_param('i', $id);
+$currentRouteStmt->execute();
+$currentRouteResult = $currentRouteStmt->get_result();
+$currentStudent = $currentRouteResult ? $currentRouteResult->fetch_assoc() : null;
+if (!$currentStudent) {
+    echo json_encode(['success' => false, 'message' => 'Estudiante no encontrado']);
+    exit;
+}
+
+if (!user_can_access_route($scope, intval($currentStudent['ruta_id'] ?? 0))) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'No tienes permiso para editar este estudiante']);
+    exit;
+}
 $columnsResult = $conn->query("SHOW COLUMNS FROM estudiantes");
 
 if (!$columnsResult) {
@@ -73,6 +97,15 @@ foreach ($editableColumns as $field => $meta) {
     }
 
     $setClauses[] = "`$field` = ?";
+}
+
+if (array_key_exists('ruta_id', $_POST)) {
+    $targetRoute = intval($_POST['ruta_id']);
+    if ($targetRoute > 0 && !user_can_access_route($scope, $targetRoute)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'No puedes mover el estudiante a esa ruta']);
+        exit;
+    }
 }
 
 if (isset($_FILES['foto']) && is_array($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {

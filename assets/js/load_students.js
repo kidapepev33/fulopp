@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const tableBody = document.querySelector(".students-table tbody");
     const searchInput = document.getElementById("students-search");
+    const toast = window.AppToast;
 
     const params = new URLSearchParams(window.location.search);
     const id = params.get("id");
@@ -17,7 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch(`../includes/functions/load_students.php?ruta_id=${id}`)
         .then(res => res.json())
         .then(data => {
-            const students = Array.isArray(data) ? data : [];
+            if (!data || data.success === false) {
+                throw new Error(data && data.message ? data.message : "No se pudo cargar estudiantes");
+            }
+
+            const students = Array.isArray(data.students) ? data.students : [];
 
             const escapeHtml = value => String(value)
                 .replace(/&/g, "&amp;")
@@ -86,12 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 tableBody.innerHTML = rows.map(student => `
                     <tr>
-                        <td>${getPhotoCell(student)}</td>
-                        <td>${escapeHtml(toSafeText(student.cedula))}</td>
-                        <td>${escapeHtml(toSafeText(student.nombre))}</td>
-                        <td>${escapeHtml(toSafeText(student.seccion))}</td>
-                        <td>${escapeHtml(toBecadoText(student.becado))}</td>
-                        <td>${getBarcodeCell(student)}</td>
+                        <td data-label="Foto">${getPhotoCell(student)}</td>
+                        <td data-label="Cedula">${escapeHtml(toSafeText(student.cedula))}</td>
+                        <td data-label="Nombre">${escapeHtml(toSafeText(student.nombre))}</td>
+                        <td data-label="Seccion">${escapeHtml(toSafeText(student.seccion))}</td>
+                        <td data-label="Becado">${escapeHtml(toBecadoText(student.becado))}</td>
+                        <td data-label="Codigo barras">${getBarcodeCell(student)}</td>
                     </tr>
                 `).join("");
             };
@@ -126,6 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             console.error("Error:", err);
-            tableBody.innerHTML = '<tr class="table-placeholder"><td colspan="6">Error cargando estudiantes</td></tr>';
+            tableBody.innerHTML = `<tr class="table-placeholder"><td colspan="6">${err.message || "Error cargando estudiantes"}</td></tr>`;
+            if (toast) toast.error(err.message || "Error cargando estudiantes");
         });
 });

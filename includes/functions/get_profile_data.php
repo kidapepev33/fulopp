@@ -28,7 +28,14 @@ if ($routesResult) {
 }
 
 $vehicles = [];
-$vehiclesResult = $conn->query("SELECT id, codigo_interno, placa, capacidad, estado FROM vehiculos ORDER BY codigo_interno ASC");
+$vehiclesResult = $conn->query(
+    "SELECT v.id, v.codigo_interno, v.placa, v.capacidad, v.estado,
+            c.id AS assigned_driver_id,
+            TRIM(CONCAT(COALESCE(c.nombre, ''), ' ', COALESCE(c.apellidos, ''))) AS assigned_driver_name
+     FROM vehiculos v
+     LEFT JOIN chofer c ON c.vehiculo_id = v.id
+     ORDER BY v.codigo_interno ASC"
+);
 if ($vehiclesResult) {
     while ($vehicle = $vehiclesResult->fetch_assoc()) {
         $vehicles[] = $vehicle;
@@ -60,21 +67,63 @@ if (!$profile) {
 }
 
 $assignedRoutes = [];
-if (!empty($profile['vehiculo_id'])) {
+if (($profile['rol'] ?? 'chofer') !== 'admin') {
     $routeStmt = $conn->prepare(
         "SELECT r.id, r.nombre
-         FROM vehiculo_rutas vr
-         INNER JOIN rutas r ON r.id = vr.ruta_id
-         WHERE vr.vehiculo_id = ?
+         FROM chofer_rutas cr
+         INNER JOIN rutas r ON r.id = cr.ruta_id
+         WHERE cr.chofer_id = ?
          ORDER BY r.nombre ASC"
     );
     if ($routeStmt) {
-        $vehiculoId = intval($profile['vehiculo_id']);
-        $routeStmt->bind_param('i', $vehiculoId);
+        $choferId = intval($profile['id'] ?? 0);
+        $routeStmt->bind_param('i', $choferId);
         $routeStmt->execute();
         $routeResult = $routeStmt->get_result();
         while ($route = $routeResult->fetch_assoc()) {
             $assignedRoutes[] = $route;
+        }
+    }
+}
+
+$drivers = [];
+if (($profile['rol'] ?? 'chofer') === 'admin') {
+    $driversSql = "
+        SELECT c.id, c.nombre, c.apellidos, c.email, c.rol, c.vehiculo_id,
+               v.codigo_interno, v.placa, v.capacidad, v.estado,
+               GROUP_CONCAT(DISTINCT r.id ORDER BY r.nombre ASC SEPARATOR ',') AS route_ids,
+               GROUP_CONCAT(DISTINCT r.nombre ORDER BY r.nombre ASC SEPARATOR '||') AS route_names
+        FROM chofer c
+        LEFT JOIN vehiculos v ON v.id = c.vehiculo_id
+        LEFT JOIN chofer_rutas cr ON cr.chofer_id = c.id
+        LEFT JOIN rutas r ON r.id = cr.ruta_id
+        WHERE (c.rol = 'chofer' OR c.rol IS NULL OR c.rol = '')
+        GROUP BY c.id, c.nombre, c.apellidos, c.email, c.rol, c.vehiculo_id, v.codigo_interno, v.placa, v.capacidad, v.estado
+        ORDER BY c.nombre ASC, c.apellidos ASC
+    ";
+
+    $driversResult = $conn->query($driversSql);
+    if ($driversResult) {
+        while ($driver = $driversResult->fetch_assoc()) {
+            $routeIds = trim((string)($driver['route_ids'] ?? ''));
+            $routeNames = trim((string)($driver['route_names'] ?? ''));
+            $driverRoutes = [];
+
+            if ($routeIds !== '' && $routeNames !== '') {
+                $ids = explode(',', $routeIds);
+                $names = explode('||', $routeNames);
+                $max = min(count($ids), count($names));
+                for ($i = 0; $i < $max; $i++) {
+                    $driverRoutes[] = [
+                        'id' => intval($ids[$i]),
+                        'nombre' => $names[$i]
+                    ];
+                }
+            }
+
+            unset($driver['route_ids'], $driver['route_names']);
+            $driver['routes'] = $driverRoutes;
+            $drivers[] = $driver;
         }
     }
 }
@@ -84,6 +133,6 @@ echo json_encode([
     'profile' => $profile,
     'assigned_routes' => $assignedRoutes,
     'routes' => $routes,
-    'vehicles' => $vehicles
+    'vehicles' => $vehicles,
+    'drivers' => $drivers
 ]);
-

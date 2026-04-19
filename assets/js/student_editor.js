@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("student-form-container");
+    const toast = window.AppToast;
     const params = new URLSearchParams(window.location.search);
     const studentId = params.get("id");
 
@@ -119,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const attachSubmit = () => {
         const form = document.getElementById("student-edit-form");
-        const message = document.getElementById("student-save-message");
         const fotoInput = document.getElementById("foto");
         const fotoPreview = document.getElementById("foto-preview");
 
@@ -158,13 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!result || !result.success) {
                         throw new Error(result && result.message ? result.message : "No se pudo guardar");
                     }
-                    message.textContent = "Cambios guardados correctamente.";
-                    message.className = "save-message success";
+                    if (toast) toast.success("Cambios guardados correctamente.");
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    message.textContent = "Error al guardar cambios.";
-                    message.className = "save-message error";
+                    if (toast) toast.error(error.message || "Error al guardar cambios.");
                 });
         });
     };
@@ -173,7 +171,8 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(res => res.json())
         .then(payload => {
             if (!payload || !payload.student || !Array.isArray(payload.columns)) {
-                container.innerHTML = '<div class="table-placeholder">No se encontro el estudiante.</div>';
+                const errorMessage = payload && payload.message ? payload.message : "No se encontro el estudiante.";
+                container.innerHTML = `<div class="table-placeholder">${escapeHtml(errorMessage)}</div>`;
                 return;
             }
 
@@ -188,7 +187,6 @@ document.addEventListener("DOMContentLoaded", () => {
                         <button type="submit" class="action-link action-button">Guardar cambios</button>
                         <a class="action-link" href="informe.html">Volver al informe</a>
                     </div>
-                    <p id="student-save-message" class="save-message"></p>
                 </form>
             `;
 
@@ -196,6 +194,6 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(err => {
             console.error("Error:", err);
-            container.innerHTML = '<div class="table-placeholder">Error cargando estudiante.</div>';
+            container.innerHTML = '<div class="table-placeholder">Error cargando estudiante o sin permisos.</div>';
         });
 });

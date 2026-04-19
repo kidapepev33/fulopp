@@ -1,13 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     loadHeader();
     loadFooter();
-    window.addEventListener('resize', () => {
-        loadHeader();
-        loadFooter();
-    });
 });
-
-let currentView = null;
 
 function getBasePath(currentPath, section) {
     if (currentPath.includes('/pages/auth/')) {
@@ -20,17 +14,10 @@ function getBasePath(currentPath, section) {
 }
 
 function loadHeader() {
-    const width = window.innerWidth;
     const currentPath = window.location.pathname;
     const basePath = getBasePath(currentPath, 'components');
-    const newView = width <= 768 ? 'mobile' : 'desktop';
 
-    if (currentView === newView) return;
-    currentView = newView;
-
-    const file = newView === 'mobile' ? 'header-mobile.html' : 'header-desktop.html';
-
-    fetch(basePath + file)
+    fetch(basePath + 'header-desktop.html')
         .then(res => res.text())
         .then(html => {
             const headerContainer = document.getElementById('header-container');
@@ -62,7 +49,9 @@ function setupAuthNavigation() {
                 '/fulopp/pages/rutas.html',
                 '/fulopp/pages/informe.html',
                 '/fulopp/pages/perfil.html',
-                '/fulopp/pages/agregar.html'
+                '/fulopp/pages/agregar.html',
+                '/fulopp/pages/ruta.html',
+                '/fulopp/pages/student.html'
             ];
             const isProtected = protectedPaths.some(path => currentPath.endsWith(path));
 

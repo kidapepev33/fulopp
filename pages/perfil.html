@@ -23,8 +23,11 @@
             <aside class="profile-sidebar table-wrapper">
                 <button class="profile-nav-link active" type="button" data-target="perfil-panel">Perfil</button>
                 <button class="profile-nav-link" type="button" data-target="estudiante-panel">Agregar Estudiante</button>
-                <button class="profile-nav-link" type="button" data-target="chofer-panel">Agregar Chofer (Cuenta)</button>
-                <button class="profile-nav-link" type="button" data-target="vehiculo-panel">Agregar Vehiculo</button>
+                <button class="profile-nav-link" type="button" data-target="chofer-panel" data-admin-only="1">Agregar Chofer (Cuenta)</button>
+                <button class="profile-nav-link" type="button" data-target="editar-chofer-panel" data-admin-only="1">Editar Choferes</button>
+                <button class="profile-nav-link" type="button" data-target="vehiculo-panel" data-admin-only="1">Agregar Vehiculo</button>
+                <button class="profile-nav-link" type="button" data-target="vehiculos-panel" data-admin-only="1">Vehiculos</button>
+                <button class="profile-nav-link" type="button" data-target="editar-vehiculo-panel" data-admin-only="1">Editar Vehiculos</button>
             </aside>
 
             <section class="profile-content">
@@ -45,6 +48,10 @@
                             <div class="summary-card">
                                 <p class="summary-label">Rutas</p>
                                 <p id="summary-routes" class="summary-value">Cargando...</p>
+                            </div>
+                            <div class="summary-card">
+                                <p class="summary-label">Correo</p>
+                                <p id="summary-email" class="summary-value">Cargando...</p>
                             </div>
                         </div>
                         <p id="profile-message" class="save-message"></p>
@@ -96,12 +103,10 @@
                             <button type="submit" class="action-link action-button">Guardar estudiante</button>
                             <a class="action-link" href="informe.html">Ver informe</a>
                         </div>
-
-                        <p id="save-message" class="save-message"></p>
                     </form>
                 </article>
 
-                <article id="chofer-panel" class="profile-panel table-wrapper" data-panel>
+                <article id="chofer-panel" class="profile-panel table-wrapper" data-panel data-admin-only="1">
                     <form id="add-driver-form" class="student-add-form" novalidate>
                         <h3 class="panel-title">Agregar chofer</h3>
                         <p class="panel-subtitle">Crea cuenta de chofer o administrador.</p>
@@ -134,8 +139,9 @@
 
                             <div class="form-field">
                                 <label for="vehicle-code">Codigo interno del vehiculo</label>
-                                <input id="vehicle-code" name="codigo_interno" type="text" maxlength="80" autocomplete="off"
-                                    placeholder="Ejemplo: BUS-01">
+                                <select id="vehicle-code" name="codigo_interno">
+                                    <option value="">Selecciona vehiculo disponible</option>
+                                </select>
                             </div>
 
                             <div class="form-field vehicle-routes-field">
@@ -178,7 +184,7 @@
                     </form>
                 </article>
 
-                <article id="vehiculo-panel" class="profile-panel table-wrapper" data-panel>
+                <article id="vehiculo-panel" class="profile-panel table-wrapper" data-panel data-admin-only="1">
                     <form id="add-vehicle-form" class="student-add-form" novalidate>
                         <h3 class="panel-title">Agregar vehiculo</h3>
                         <p class="panel-subtitle">Registra un nuevo vehiculo para asignarlo a choferes.</p>
@@ -196,21 +202,9 @@
 
                             <div class="form-field">
                                 <label for="vehicle-status">Estado</label>
-                                <input id="vehicle-status" name="estado" type="text" required maxlength="40" autocomplete="off"
-                                    placeholder="Activo / Mantenimiento">
-                            </div>
-
-                            <div class="form-field">
-                                <label for="vehicle-route-1">Ruta 1</label>
-                                <select id="vehicle-route-1" name="ruta_ids[]" required>
-                                    <option value="">Selecciona ruta</option>
-                                </select>
-                            </div>
-
-                            <div class="form-field">
-                                <label for="vehicle-route-2">Ruta 2 (opcional)</label>
-                                <select id="vehicle-route-2" name="ruta_ids[]">
-                                    <option value="">Selecciona ruta</option>
+                                <select id="vehicle-status" name="estado" required>
+                                    <option value="activo">Activo</option>
+                                    <option value="mantenimiento">Mantenimiento</option>
                                 </select>
                             </div>
 
@@ -227,12 +221,155 @@
                         <p id="vehicle-message" class="save-message"></p>
                     </form>
                 </article>
+
+                <article id="editar-chofer-panel" class="profile-panel table-wrapper" data-panel data-admin-only="1">
+                    <form id="edit-driver-form" class="student-add-form" novalidate>
+                        <h3 class="panel-title">Editar choferes</h3>
+                        <p class="panel-subtitle">Cambia vehiculo, rutas o elimina una cuenta de chofer.</p>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="edit-driver-select">Chofer</label>
+                                <select id="edit-driver-select" required>
+                                    <option value="">Selecciona chofer</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-driver-name">Nombre completo</label>
+                                <input id="edit-driver-name" type="text" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-driver-email">Correo</label>
+                                <input id="edit-driver-email" type="text" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-driver-vehicle">Vehiculo</label>
+                                <select id="edit-driver-vehicle" name="vehiculo_id">
+                                    <option value="">Sin vehiculo asignado</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-driver-route-1">Ruta 1</label>
+                                <select id="edit-driver-route-1" name="ruta_ids[]">
+                                    <option value="">Selecciona ruta</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-driver-route-2">Ruta 2 (opcional)</label>
+                                <select id="edit-driver-route-2" name="ruta_ids[]">
+                                    <option value="">Selecciona ruta</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="vehicle-preview">
+                            <p class="summary-label">Vehiculo del chofer</p>
+                            <div class="vehicle-preview-grid">
+                                <div>
+                                    <p class="summary-label">Placa</p>
+                                    <p id="edit-driver-vehicle-plate" class="summary-value">Sin seleccionar</p>
+                                </div>
+                                <div>
+                                    <p class="summary-label">Capacidad</p>
+                                    <p id="edit-driver-vehicle-capacity" class="summary-value">Sin seleccionar</p>
+                                </div>
+                                <div>
+                                    <p class="summary-label">Estado</p>
+                                    <p id="edit-driver-vehicle-status" class="summary-value">Sin seleccionar</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="action-link action-button">Guardar cambios</button>
+                            <button id="delete-driver-button" type="button" class="action-link action-button action-danger">Borrar cuenta</button>
+                        </div>
+                        <p id="edit-driver-message" class="save-message"></p>
+                    </form>
+                </article>
+
+                <article id="editar-vehiculo-panel" class="profile-panel table-wrapper" data-panel data-admin-only="1">
+                    <form id="edit-vehicle-form" class="student-add-form" novalidate>
+                        <h3 class="panel-title">Editar vehiculos</h3>
+                        <p class="panel-subtitle">Actualiza placa, capacidad y estado del vehiculo.</p>
+
+                        <div class="form-grid">
+                            <div class="form-field">
+                                <label for="edit-vehicle-select">Vehiculo</label>
+                                <select id="edit-vehicle-select" required>
+                                    <option value="">Selecciona vehiculo</option>
+                                </select>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-vehicle-code">Codigo interno</label>
+                                <input id="edit-vehicle-code" type="text" readonly>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-vehicle-plate">Placa</label>
+                                <input id="edit-vehicle-plate" name="placa" type="text" required maxlength="20" autocomplete="off">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-vehicle-capacity">Capacidad</label>
+                                <input id="edit-vehicle-capacity" name="capacidad" type="number" required min="1" max="120">
+                            </div>
+
+                            <div class="form-field">
+                                <label for="edit-vehicle-status">Estado</label>
+                                <select id="edit-vehicle-status" name="estado" required>
+                                    <option value="activo">Activo</option>
+                                    <option value="mantenimiento">Mantenimiento</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="action-link action-button">Guardar vehiculo</button>
+                        </div>
+                        <p id="edit-vehicle-message" class="save-message"></p>
+                    </form>
+                </article>
+
+                <article id="vehiculos-panel" class="profile-panel table-wrapper" data-panel data-admin-only="1">
+                    <div class="panel-body">
+                        <h3 class="panel-title">Vehiculos registrados</h3>
+                        <p class="panel-subtitle">Listado general para ir directo a editar.</p>
+
+                        <div class="table-wrapper">
+                            <table class="students-table">
+                                <thead>
+                                    <tr>
+                                        <th>Codigo interno</th>
+                                        <th>Placa</th>
+                                        <th>Capacidad</th>
+                                        <th>Estado</th>
+                                        <th>Chofer asignado</th>
+                                        <th>Accion</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vehicles-table-body">
+                                    <tr class="table-placeholder">
+                                        <td colspan="6">Cargando vehiculos...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </article>
             </section>
         </div>
     </main>
 
     <footer id="footer-container"></footer>
 
+    <script src="../assets/js/components/toast.js"></script>
     <script src="../assets/js/components/header.js"></script>
     <script src="../assets/js/add_student.js"></script>
     <script src="../assets/js/perfil.js"></script>

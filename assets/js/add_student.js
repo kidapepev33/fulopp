@@ -2,9 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("add-student-form");
     const rutaSelect = document.getElementById("ruta_id");
     const becadoInput = document.getElementById("becado");
-    const message = document.getElementById("save-message");
+    const toast = window.AppToast;
 
-    if (!form || !rutaSelect || !becadoInput || !message) {
+    if (!form || !rutaSelect || !becadoInput) {
         return;
     }
 
@@ -14,11 +14,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(/>/g, "&gt;")
         .replace(/\"/g, "&quot;")
         .replace(/'/g, "&#39;");
-
-    const setMessage = (text, type) => {
-        message.textContent = text;
-        message.className = "save-message " + type;
-    };
 
     fetch("../includes/functions/load_routes.php")
         .then(res => res.json())
@@ -38,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(() => {
             rutaSelect.innerHTML = '<option value="">Error cargando rutas</option>';
+            if (toast) toast.error("No se pudieron cargar rutas.");
         });
 
     form.addEventListener("submit", event => {
@@ -50,8 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const formData = new FormData(form);
         formData.set("becado", becadoInput.checked ? "1" : "0");
 
-        setMessage("Guardando estudiante...", "");
-
         fetch("../includes/functions/create_student.php", {
             method: "POST",
             body: formData
@@ -63,11 +57,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 const barcode = String(result.codigo_barras || "").trim();
-                setMessage("Estudiante guardado. Codigo asignado: " + barcode, "success");
+                if (toast) {
+                    toast.success("Estudiante guardado. Codigo asignado: " + barcode);
+                }
                 form.reset();
             })
             .catch(error => {
-                setMessage(error.message || "Error al guardar estudiante.", "error");
+                if (toast) {
+                    toast.error(error.message || "Error al guardar estudiante.");
+                }
             });
     });
 });

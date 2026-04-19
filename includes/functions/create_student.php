@@ -1,6 +1,10 @@
 <?php
 require_once '../../config/server.php';
+require_once 'auth_scope.php';
 header('Content-Type: application/json; charset=utf-8');
+
+$authUser = require_auth_user();
+$scope = get_user_scope($conn, intval($authUser['id'] ?? 0));
 
 function barcode_pattern_code39($char)
 {
@@ -160,6 +164,12 @@ $becado = isset($_POST['becado']) && strval($_POST['becado']) === '1' ? 1 : 0;
 
 if ($cedula === '' || $nombre === '' || $seccion === '' || $rutaId <= 0) {
     echo json_encode(['success' => false, 'message' => 'Completa todos los campos requeridos']);
+    exit;
+}
+
+if (!user_can_access_route($scope, $rutaId)) {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'No puedes registrar estudiantes en esa ruta']);
     exit;
 }
 

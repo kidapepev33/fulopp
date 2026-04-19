@@ -1,6 +1,10 @@
 <?php
 require_once '../../config/server.php';
+require_once 'auth_scope.php';
 header('Content-Type: application/json; charset=utf-8');
+
+$authUser = require_auth_user();
+$scope = get_user_scope($conn, intval($authUser['id'] ?? 0));
 
 if (!isset($_GET['id'])) {
     echo json_encode(['student' => null, 'columns' => [], 'routes' => []]);
@@ -16,6 +20,12 @@ $studentStmt->execute();
 $studentResult = $studentStmt->get_result();
 $student = $studentResult->fetch_assoc();
 
+if ($student && !user_can_access_route($scope, intval($student['ruta_id'] ?? 0))) {
+    http_response_code(403);
+    echo json_encode(['student' => null, 'columns' => [], 'routes' => [], 'message' => 'No tienes acceso a este estudiante']);
+    exit;
+}
+
 $columns = [];
 $columnsResult = $conn->query("SHOW COLUMNS FROM estudiantes");
 if ($columnsResult) {
@@ -25,7 +35,17 @@ if ($columnsResult) {
 }
 
 $routes = [];
-$routesResult = $conn->query("SELECT id, nombre FROM rutas ORDER BY nombre ASC");
+$routesSql = "SELECT id, nombre FROM rutas";
+if ($scope['role'] !== 'admin') {
+    $allowed = $scope['allowed_route_ids'];
+    if (count($allowed) === 0) {
+        $routesSql .= " WHERE 1 = 0";
+    } else {
+        $routesSql .= " WHERE id IN (" . build_in_clause_int($allowed) . ")";
+    }
+}
+$routesSql .= " ORDER BY nombre ASC";
+$routesResult = $conn->query($routesSql);
 if ($routesResult) {
     while ($route = $routesResult->fetch_assoc()) {
         $routes[] = $route;

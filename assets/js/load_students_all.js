@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const scannerClose = document.getElementById("scanner-close");
     const scannerMessage = document.getElementById("scanner-message");
     const scannerResult = document.getElementById("scanner-result");
+    const toast = window.AppToast;
 
     if (!tableBody) return;
 
@@ -50,6 +51,14 @@ document.addEventListener("DOMContentLoaded", () => {
         return `<div class="student-photo placeholder">${escapeHtml(getInitials(student.nombre))}</div>`;
     };
 
+    const getPhotoMarkupForCard = student => {
+        const photo = String(student.foto ?? "").trim();
+        if (photo) {
+            return `<img class="student-photo" src="${escapeHtml(photo)}" alt="Foto de ${escapeHtml(toSafeText(student.nombre))}">`;
+        }
+        return `<div class="student-photo placeholder">${escapeHtml(getInitials(student.nombre))}</div>`;
+    };
+
     const getBarcodeCell = student => {
         const safeCode = escapeHtml(toSafeText(student.codigo_barras));
         if (!student.id) {
@@ -75,13 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         tableBody.innerHTML = rows.map(student => `
             <tr>
-                <td class="td-photo" >${getPhotoCell(student)}</td>
-                <td class="td-cedula" >${escapeHtml(toSafeText(student.cedula))}</td>
-                <td class="td-nombre" >${escapeHtml(toSafeText(student.nombre))}</td>
-                <td class="td-seccion" >${escapeHtml(toSafeText(student.seccion))}</td>
-                <td class="td-beca" >${escapeHtml(toBecadoText(student.becado))}</td>
-                <td class="td-qr_barcode" >${getBarcodeCell(student)}</td>
-                <td><a class="action-link" href="student.html?id=${encodeURIComponent(student.id)}">Editar</a></td>
+                <td class="td-photo" data-label="Foto">${getPhotoCell(student)}</td>
+                <td class="td-cedula" data-label="Cedula">${escapeHtml(toSafeText(student.cedula))}</td>
+                <td class="td-nombre" data-label="Nombre">${escapeHtml(toSafeText(student.nombre))}</td>
+                <td class="td-seccion" data-label="Seccion">${escapeHtml(toSafeText(student.seccion))}</td>
+                <td class="td-beca" data-label="Becado">${escapeHtml(toBecadoText(student.becado))}</td>
+                <td class="td-qr_barcode" data-label="Codigo barras">${getBarcodeCell(student)}</td>
+                <td data-label="Accion"><a class="action-link" href="student.html?id=${encodeURIComponent(student.id)}">Editar</a></td>
             </tr>
         `).join("");
     };
@@ -90,18 +99,61 @@ document.addEventListener("DOMContentLoaded", () => {
         if (scannerMessage) scannerMessage.textContent = text;
     };
 
-    const setResult = student => {
+    const setResult = payload => {
         if (!scannerResult) return;
-        if (!student) {
+        if (!payload) {
             scannerResult.innerHTML = "";
             return;
         }
+
+        if (payload.mode === "restricted") {
+            const student = payload.student || {};
+            scannerResult.innerHTML = `
+                <div class="scan-result-card scan-result-card--restricted">
+                    <div class="scan-warning-banner">
+                        Este estudiante no pertenece a tus rutas asignadas
+                    </div>
+                    <div class="scan-result-top">
+                        <div class="scan-result-photo">${getPhotoMarkupForCard(student)}</div>
+                        <div class="scan-result-main">
+                            <div class="scan-result-name">${escapeHtml(toSafeText(student.nombre))}</div>
+                            <div class="scan-result-seccion">Seccion: ${escapeHtml(toSafeText(student.seccion))}</div>
+                        </div>
+                    </div>
+                    <div class="scan-result-meta">
+                        <span>Cedula: ${escapeHtml(toSafeText(student.cedula))}</span>
+                        <span>Ruta: ${escapeHtml(toSafeText(payload.routeName))}</span>
+                        <span>Chofer: ${escapeHtml(toSafeText(payload.driverName))}</span>
+                        <span>Becado: ${escapeHtml(toBecadoText(student.becado))}</span>
+                    </div>
+                    <div class="scan-result-barcode">
+                        ${getBarcodeCell(student)}
+                        <span class="barcode-text">${escapeHtml(toSafeText(student.codigo_barras))}</span>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
+        const student = payload.student || {};
         scannerResult.innerHTML = `
-            <div class="scan-result-card">
-                <strong>${escapeHtml(toSafeText(student.nombre))}</strong>
-                <span>Cedula: ${escapeHtml(toSafeText(student.cedula))}</span>
-                <span>Seccion: ${escapeHtml(toSafeText(student.seccion))}</span>
-                <span>Codigo: ${escapeHtml(toSafeText(student.codigo_barras))}</span>
+            <div class="scan-result-card scan-result-card--student">
+                <div class="scan-result-top">
+                    <div class="scan-result-photo">${getPhotoMarkupForCard(student)}</div>
+                    <div class="scan-result-main">
+                        <div class="scan-result-name">${escapeHtml(toSafeText(student.nombre))}</div>
+                        <div class="scan-result-seccion">Seccion: ${escapeHtml(toSafeText(student.seccion))}</div>
+                    </div>
+                </div>
+                <div class="scan-result-meta">
+                    <span>Cedula: ${escapeHtml(toSafeText(student.cedula))}</span>
+                    <span>Ruta: ${escapeHtml(toSafeText(student.ruta_nombre))}</span>
+                    <span>Becado: ${escapeHtml(toBecadoText(student.becado))}</span>
+                </div>
+                <div class="scan-result-barcode">
+                    ${getBarcodeCell(student)}
+                    <span class="barcode-text">${escapeHtml(toSafeText(student.codigo_barras))}</span>
+                </div>
             </div>
         `;
     };
@@ -157,6 +209,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return allStudents.find(student => String(student.codigo_barras ?? "").trim().toLowerCase() === target) || null;
     };
 
+    const fetchScannedStudent = code => {
+        return fetch("../includes/functions/scan_student_barcode.php?codigo=" + encodeURIComponent(code))
+            .then(res => res.json());
+    };
+
     const applySearch = value => {
         if (!searchInput) return;
         searchInput.value = value;
@@ -182,18 +239,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         scanLocked = true;
-        applySearch(normalized);
 
-        const found = findStudentByBarcode(normalized);
-        if (found) {
-            setResult(found);
-            setScannerMessage("Codigo detectado correctamente.");
-        } else {
-            setResult(null);
-            setScannerMessage("Codigo detectado, pero no existe en la base de datos.");
-        }
+        fetchScannedStudent(normalized)
+            .then(result => {
+                if (!result || !result.success) {
+                    setResult(null);
+                    setScannerMessage(result && result.message ? result.message : "Codigo detectado, pero no existe en la base de datos.");
+                    if (toast) toast.error(result && result.message ? result.message : "Codigo no encontrado.");
+                    return;
+                }
 
-        stopScanner();
+                if (result.allowed) {
+                    setResult({ mode: "student", student: result.student });
+                    setScannerMessage("Codigo detectado correctamente.");
+                    if (toast) toast.success("Estudiante detectado correctamente.");
+                    return;
+                }
+
+                setResult({
+                    mode: "restricted",
+                    student: result.student || null,
+                    routeName: result.route ? result.route.nombre : "",
+                    driverName: result.driver ? result.driver.nombre : ""
+                });
+                setScannerMessage("El estudiante pertenece a otra ruta.");
+                if (toast) toast.warning("El estudiante pertenece a otra ruta.");
+            })
+            .catch(() => {
+                setResult(null);
+                setScannerMessage("No se pudo consultar el codigo escaneado.");
+                if (toast) toast.error("No se pudo consultar el codigo escaneado.");
+            })
+            .finally(() => {
+                stopScanner();
+            });
     };
 
     const startQuagga = async () => {
@@ -272,6 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (quaggaOk) return;
 
         setScannerMessage("No se pudo iniciar el escaner. Revisa permisos de camara.");
+        if (toast) toast.error("No se pudo iniciar el escaner.");
     };
 
     if (scannerClose) {
@@ -297,6 +377,9 @@ document.addEventListener("DOMContentLoaded", () => {
     fetch("../includes/functions/load_students_all.php")
         .then(res => res.json())
         .then(data => {
+            if (!Array.isArray(data)) {
+                throw new Error(data && data.message ? data.message : "No se pudieron cargar estudiantes");
+            }
             const students = Array.isArray(data) ? data : [];
             allStudents = students;
             renderRows(students);
@@ -326,7 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 renderRows(filtered);
 
                 const exact = findStudentByBarcode(term);
-                setResult(exact);
+                setResult(exact ? { mode: "student", student: exact } : null);
             });
 
             const params = new URLSearchParams(window.location.search);
@@ -334,10 +417,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (initialTerm) {
                 applySearch(initialTerm);
                 const exact = findStudentByBarcode(initialTerm);
-                setResult(exact);
+                setResult(exact ? { mode: "student", student: exact } : null);
             }
         })
-        .catch(() => {
-            tableBody.innerHTML = '<tr class="table-placeholder"><td colspan="7">Error cargando estudiantes</td></tr>';
+        .catch(error => {
+            tableBody.innerHTML = `<tr class="table-placeholder"><td colspan="7">${error.message || "Error cargando estudiantes"}</td></tr>`;
+            if (toast) toast.error(error.message || "Error cargando estudiantes");
         });
 });

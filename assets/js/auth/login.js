@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
-    const message = document.getElementById('login-message');
+    const toast = window.AppToast;
 
-    if (!form || !message) {
+    if (!form) {
         return;
     }
 
@@ -27,8 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.preventDefault();
 
         const formData = new FormData(form);
-        message.textContent = 'Validando credenciales...';
-        message.className = 'login-message';
+        if (toast) toast.info('Validando credenciales...');
 
         fetch('../../includes/auth/login.php', {
             method: 'POST',
@@ -47,8 +46,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.location.href = safeNext || result.redirect || '/fulopp/pages/rutas.html';
             })
             .catch(error => {
-                message.textContent = error.message || 'Credenciales invalidas.';
-                message.className = 'login-message error';
+                if (toast) {
+                    toast.error(error.message || 'Credenciales invalidas.');
+                }
             });
     });
 });

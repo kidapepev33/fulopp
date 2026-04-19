@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../../config/server.php';
-require_once 'profile_schema.php';
+require_once 'auth_scope.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -9,13 +9,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-if (!isset($_SESSION['auth_user']) || !is_array($_SESSION['auth_user'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Sesion no valida']);
+$authUser = require_auth_user();
+$scope = get_user_scope($conn, intval($authUser['id'] ?? 0));
+
+if ($scope['role'] !== 'admin') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Solo administradores pueden crear choferes']);
     exit;
 }
-
-ensure_profile_schema($conn);
 
 $nombre = trim($_POST['nombre'] ?? '');
 $apellidos = trim($_POST['apellidos'] ?? '');
@@ -63,7 +64,7 @@ if (!$isAdmin) {
         exit;
     }
 
-    $vehiculoStmt = $conn->prepare("SELECT id FROM vehiculos WHERE codigo_interno = ? LIMIT 1");
+    $vehiculoStmt = $conn->prepare("SELECT id, estado FROM vehiculos WHERE codigo_interno = ? LIMIT 1");
     if (!$vehiculoStmt) {
         echo json_encode(['success' => false, 'message' => 'No se pudo validar vehiculo']);
         exit;
@@ -78,6 +79,11 @@ if (!$isAdmin) {
     }
 
     $vehiculoId = intval($vehiculo['id']);
+    $estadoVehiculo = strtolower(trim((string)($vehiculo['estado'] ?? 'activo')));
+    if ($estadoVehiculo === 'mantenimiento') {
+        echo json_encode(['success' => false, 'message' => 'No puedes asignar un vehiculo en mantenimiento']);
+        exit;
+    }
 
     $ownerStmt = $conn->prepare("SELECT id FROM chofer WHERE vehiculo_id = ? LIMIT 1");
     if ($ownerStmt) {
@@ -149,23 +155,28 @@ try {
         throw new Exception('No se pudo guardar la cuenta');
     }
 
-    if (!$isAdmin && $vehiculoId !== null) {
-        $deleteRouteStmt = $conn->prepare("DELETE FROM vehiculo_rutas WHERE vehiculo_id = ?");
+    $newDriverId = intval($conn->insert_id);
+    if ($newDriverId <= 0) {
+        throw new Exception('No se pudo obtener el ID del chofer');
+    }
+
+    if (!$isAdmin) {
+        $deleteRouteStmt = $conn->prepare("DELETE FROM chofer_rutas WHERE chofer_id = ?");
         if (!$deleteRouteStmt) {
             throw new Exception('No se pudo limpiar rutas previas');
         }
-        $deleteRouteStmt->bind_param('i', $vehiculoId);
+        $deleteRouteStmt->bind_param('i', $newDriverId);
         $deleteRouteStmt->execute();
 
-        $insertRouteStmt = $conn->prepare("INSERT INTO vehiculo_rutas (vehiculo_id, ruta_id) VALUES (?, ?)");
+        $insertRouteStmt = $conn->prepare("INSERT INTO chofer_rutas (chofer_id, ruta_id) VALUES (?, ?)");
         if (!$insertRouteStmt) {
             throw new Exception('No se pudo asignar rutas');
         }
 
         foreach ($rutaIds as $rutaId) {
-            $insertRouteStmt->bind_param('ii', $vehiculoId, $rutaId);
+            $insertRouteStmt->bind_param('ii', $newDriverId, $rutaId);
             if (!$insertRouteStmt->execute()) {
-                throw new Exception('No se pudo asignar una ruta al vehiculo');
+                throw new Exception('No se pudo asignar una ruta al chofer');
             }
         }
     }
