@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once '../../config/server.php';
-require_once 'profile_schema.php';
+require_once __DIR__ . '/../../config/server.php';
+require_once __DIR__ . '/profile_schema.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['auth_user']) || !is_array($_SESSION['auth_user'])) {
@@ -136,3 +136,4 @@ echo json_encode([
     'vehicles' => $vehicles,
     'drivers' => $drivers
 ]);
+
