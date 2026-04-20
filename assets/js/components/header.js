@@ -31,6 +31,8 @@ function loadHeader() {
 function setupAuthNavigation() {
     const currentPath = window.location.pathname;
     const authBasePath = getBasePath(currentPath, 'auth');
+    const normalizePath = path => String(path || '').replace(/^\/fulopp/, '');
+    const appPrefix = currentPath.startsWith('/fulopp/') ? '/fulopp' : '';
 
     fetch(authBasePath + 'session_status.php', { credentials: 'same-origin' })
         .then(res => res.json())
@@ -46,18 +48,18 @@ function setupAuthNavigation() {
             });
 
             const protectedPaths = [
-                '/fulopp/pages/rutas.html',
-                '/fulopp/pages/informe.html',
-                '/fulopp/pages/perfil.html',
-                '/fulopp/pages/agregar.html',
-                '/fulopp/pages/ruta.html',
-                '/fulopp/pages/student.html'
+                '/pages/rutas.html',
+                '/pages/informe.html',
+                '/pages/perfil.html',
+                '/pages/agregar.html',
+                '/pages/ruta.html',
+                '/pages/student.html'
             ];
-            const isProtected = protectedPaths.some(path => currentPath.endsWith(path));
+            const isProtected = protectedPaths.some(path => normalizePath(currentPath).endsWith(path));
 
             if (!loggedIn && isProtected) {
                 const next = encodeURIComponent(window.location.pathname + window.location.search);
-                window.location.href = '/fulopp/pages/auth/login.html?next=' + next;
+                window.location.href = appPrefix + '/pages/auth/login.html?next=' + next;
                 return;
             }
 
@@ -71,7 +73,7 @@ function setupAuthNavigation() {
                             credentials: 'same-origin'
                         })
                             .then(() => {
-                                window.location.href = '/fulopp/pages/auth/login.html';
+                                window.location.href = appPrefix + '/pages/auth/login.html';
                             })
                             .catch(err => {
                                 console.error('Error cerrando sesion:', err);
