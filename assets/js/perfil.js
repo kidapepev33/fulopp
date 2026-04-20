@@ -1,14 +1,21 @@
-document.addEventListener("DOMContentLoaded", () => {
+const initPerfilPage = () => {
     const sidebarLinks = Array.from(document.querySelectorAll(".profile-nav-link"));
     const panels = Array.from(document.querySelectorAll("[data-panel]"));
     const adminOnlyLinks = Array.from(document.querySelectorAll(".profile-nav-link[data-admin-only='1']"));
     const adminOnlyPanels = Array.from(document.querySelectorAll("[data-panel][data-admin-only='1']"));
+    const driverOnlyLinks = Array.from(document.querySelectorAll(".profile-nav-link[data-driver-only='1']"));
+    const driverOnlyPanels = Array.from(document.querySelectorAll("[data-panel][data-driver-only='1']"));
 
     const profileMessage = document.getElementById("profile-message");
     const summaryDriverName = document.getElementById("summary-driver-name");
     const summaryVehicle = document.getElementById("summary-vehicle");
+    const summaryVehicleCard = document.getElementById("summary-vehicle-card");
     const summaryRoutes = document.getElementById("summary-routes");
     const summaryEmail = document.getElementById("summary-email");
+    const driverVehicleCodeSummary = document.getElementById("driver-vehicle-code");
+    const driverVehiclePlateSummary = document.getElementById("driver-vehicle-plate-summary");
+    const driverVehicleCapacitySummary = document.getElementById("driver-vehicle-capacity-summary");
+    const driverVehicleStatusSummary = document.getElementById("driver-vehicle-status-summary");
 
     const driverForm = document.getElementById("add-driver-form");
     const driverMessage = document.getElementById("driver-message");
@@ -51,6 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         vehicles: [],
         drivers: []
     };
+    let vehicleRowTemplate = "";
 
     const setMessage = (element, text, type) => {
         if (!text) return;
@@ -70,6 +78,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const normalizeState = value => String(value || "").trim().toLowerCase();
     const isMaintenance = value => normalizeState(value) === "mantenimiento";
+    const escapeHtml = value => String(value === null || value === undefined || value === "" ? "-" : value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const loadUiTemplates = () => {
+        return fetch("../includes/components/perfil/vehicle-row.html")
+            .then(res => {
+                if (!res.ok) throw new Error("No se pudo cargar plantilla de vehiculos");
+                return res.text();
+            })
+            .then(template => {
+                vehicleRowTemplate = String(template || "").trim();
+            })
+            .catch(() => {
+                vehicleRowTemplate = [
+                    "<tr>",
+                    '<td data-label="Codigo interno">{{codigo_interno}}</td>',
+                    '<td data-label="Placa">{{placa}}</td>',
+                    '<td data-label="Capacidad">{{capacidad}}</td>',
+                    '<td data-label="Estado">{{estado}}</td>',
+                    '<td data-label="Chofer asignado">{{chofer_asignado}}</td>',
+                    '<td data-label="Accion"><button type="button" class="action-link action-button edit-vehicle-go" data-vehicle-id="{{id}}">Editar</button></td>',
+                    "</tr>"
+                ].join("");
+            });
+    };
 
     const setVehiclePreview = (vehicle, targets) => {
         const plateEl = targets.plate;
@@ -203,28 +240,16 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const safe = value => String(value === null || value === undefined || value === "" ? "-" : value)
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/\"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-
         vehiclesTableBody.innerHTML = latestData.vehicles.map(vehicle => {
             const assigned = String(vehicle.assigned_driver_name || "").trim();
             const status = isMaintenance(vehicle.estado) ? "Mantenimiento" : "Activo";
-            return `
-                <tr>
-                    <td data-label="Codigo interno">${safe(vehicle.codigo_interno)}</td>
-                    <td data-label="Placa">${safe(vehicle.placa)}</td>
-                    <td data-label="Capacidad">${safe(vehicle.capacidad)}</td>
-                    <td data-label="Estado">${safe(status)}</td>
-                    <td data-label="Chofer asignado">${safe(assigned || "Sin asignar")}</td>
-                    <td data-label="Accion">
-                        <button type="button" class="action-link action-button edit-vehicle-go" data-vehicle-id="${safe(vehicle.id)}">Editar</button>
-                    </td>
-                </tr>
-            `;
+            return vehicleRowTemplate
+                .replace("{{codigo_interno}}", escapeHtml(vehicle.codigo_interno))
+                .replace("{{placa}}", escapeHtml(vehicle.placa))
+                .replace("{{capacidad}}", escapeHtml(vehicle.capacidad))
+                .replace("{{estado}}", escapeHtml(status))
+                .replace("{{chofer_asignado}}", escapeHtml(assigned || "Sin asignar"))
+                .replace("{{id}}", escapeHtml(vehicle.id));
         }).join("");
 
         vehiclesTableBody.querySelectorAll(".edit-vehicle-go").forEach(button => {
@@ -348,32 +373,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 adminOnlyLinks.forEach(link => { link.style.display = isAdmin ? "" : "none"; });
                 adminOnlyPanels.forEach(panel => { panel.style.display = isAdmin ? "" : "none"; });
+                driverOnlyLinks.forEach(link => { link.style.display = isAdmin ? "none" : ""; });
+                driverOnlyPanels.forEach(panel => { panel.style.display = isAdmin ? "none" : ""; });
                 if (!isAdmin) {
                     sidebarLinks.forEach(link => {
-                        if (link.dataset.target !== "perfil-panel") {
+                        if (link.dataset.target !== "perfil-panel" && link.dataset.target !== "perfil-vehiculo-panel") {
                             link.style.display = "none";
                         }
                     });
                     panels.forEach(panel => {
-                        if (panel.id !== "perfil-panel") {
+                        if (panel.id !== "perfil-panel" && panel.id !== "perfil-vehiculo-panel") {
                             panel.style.display = "none";
                         }
                     });
                 } else {
                     sidebarLinks.forEach(link => {
-                        if (link.dataset.adminOnly !== "1") {
+                        if (link.dataset.adminOnly !== "1" && link.dataset.driverOnly !== "1") {
                             link.style.display = "";
                         }
                     });
                     panels.forEach(panel => {
-                        if (panel.dataset.adminOnly !== "1") {
+                        if (panel.dataset.adminOnly !== "1" && panel.dataset.driverOnly !== "1") {
                             panel.style.display = "";
                         }
                     });
                 }
 
                 const activeLink = document.querySelector(".profile-nav-link.active");
-                if (!isAdmin && activeLink && activeLink.dataset.adminOnly === "1") {
+                if (!isAdmin && activeLink && (activeLink.dataset.adminOnly === "1" || activeLink.style.display === "none")) {
+                    activatePanel("perfil-panel");
+                }
+                if (isAdmin && activeLink && activeLink.style.display === "none") {
                     activatePanel("perfil-panel");
                 }
 
@@ -381,6 +411,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     summaryVehicle.textContent = profile.codigo_interno + " - " + (profile.placa || "Sin placa");
                 } else {
                     summaryVehicle.textContent = "No tiene vehiculo asignado";
+                }
+                if (summaryVehicleCard) {
+                    summaryVehicleCard.style.display = isAdmin ? "" : "none";
+                }
+
+                if (!isAdmin) {
+                    if (driverVehicleCodeSummary) {
+                        driverVehicleCodeSummary.textContent = profile.codigo_interno || "No tiene vehiculo asignado";
+                    }
+                    if (driverVehiclePlateSummary) {
+                        driverVehiclePlateSummary.textContent = profile.placa || "No tiene vehiculo asignado";
+                    }
+                    if (driverVehicleCapacitySummary) {
+                        driverVehicleCapacitySummary.textContent = profile.capacidad ? String(profile.capacidad) : "No tiene vehiculo asignado";
+                    }
+                    if (driverVehicleStatusSummary) {
+                        driverVehicleStatusSummary.textContent = profile.estado || "No tiene vehiculo asignado";
+                    }
                 }
 
                 const assignedRoutes = Array.isArray(result.assigned_routes) ? result.assigned_routes : [];
@@ -664,5 +712,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     activatePanel("perfil-panel");
     updateDriverMode();
-    refreshProfileData();
-});
+    loadUiTemplates().then(() => refreshProfileData());
+};
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initPerfilPage);
+} else {
+    initPerfilPage();
+}

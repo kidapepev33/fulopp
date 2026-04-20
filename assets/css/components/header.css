@@ -11,31 +11,21 @@
   box-shadow: 0 10px 26px rgba(56, 189, 248, 0.35);
 }
 
-.header__background {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.9rem 2rem 1rem;
-}
-
-.header__brand-row {
+.header__flex {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 2.8rem;
+  justify-content: space-between;
+  padding: 1.2rem 2rem;
+  gap: 1.5rem;
 }
 
-.header__title {
-  margin: 0;
-  text-align: center;
-  font-size: clamp(1.3rem, 2.2vw, 1.9rem);
-  line-height: 1.2;
-  letter-spacing: 0.02em;
+.header__flex .text-aling {
+  font-weight: 700;
 }
 
 .logo {
-  height: clamp(54px, 9vh, 96px);
+  height: 12vh;
+  max-height: 100px;
   width: auto;
 }
 
@@ -43,7 +33,6 @@
   display: flex;
   flex-direction: row;
   justify-content: center;
-  align-items: center;
   gap: 1.2rem;
   margin-bottom: -2.2rem;
   padding: 0 1.5rem;
@@ -67,27 +56,30 @@
   box-shadow: 0 8px 16px rgba(56, 189, 248, 0.35);
 }
 .mep{
-  height: clamp(46px, 7.5vh, 74px);
+  height: 9vh;
+  max-height: 75px;
 }
 
 @media (max-width: 900px) {
-  .header__background {
-    padding: 0.8rem 1.4rem 0.9rem;
+  .header__flex {
+    padding: 1rem 1.4rem;
   }
 
-  .header__brand-row {
-    gap: 2rem;
+  .logo {
+    height: 8vh;
   }
 
-  .header__title {
-    font-size: clamp(1.2rem, 4vw, 1.6rem);
+  .mep {
+    height: 7vh;
   }
 
   .nav__link {
-    gap: 0.7rem;
+    gap: 0.8rem;
     margin-bottom: -2rem;
-    justify-content: center;
+    justify-content: flex-start;
+    overflow-x: auto;
     padding-bottom: 0.2rem;
+    scrollbar-width: thin;
   }
 }
 
@@ -96,18 +88,23 @@
     border-bottom-width: 1.8rem;
   }
 
-  .header__background {
-    padding: 0.75rem 1rem;
+  .header__flex {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+    gap: 0.8rem 1.2rem;
+    padding: 0.8rem 1rem;
   }
 
-  .header__brand-row {
-    width: 100%;
-    justify-content: space-evenly;
-    gap: 1rem;
-  }
-
-  .header__title {
+  .header__flex h1 {
+    order: 2;
+    flex-basis: 100%;
+    margin: 0;
     font-size: 1.1rem;
+  }
+
+  .header__flex a {
+    order: 1;
   }
 
   .nav__link {
@@ -118,6 +115,8 @@
     width: min(360px, 100%);
     margin-left: auto;
     margin-right: auto;
+    justify-content: center;
+    overflow-x: visible;
   }
 
   .nav__link a {

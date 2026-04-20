@@ -194,3 +194,114 @@ input:-webkit-autofill:focus {
 .margin-center {
     margin: 0 auto;
 }
+
+/* Reusable UI Blocks */
+.table-wrapper {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 1.2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    overflow-x: auto;
+}
+
+.action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--white);
+    background-color: var(--header);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.6rem;
+    font-weight: 600;
+    transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.action-link:hover {
+    background-color: rgba(56, 189, 248, 0.65);
+    transform: translateY(-1px);
+}
+
+.action-button {
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 640px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    color: var(--white);
+}
+
+.form-field label {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+    border: 1px solid rgba(56, 189, 248, 0.55);
+    border-radius: 0.6rem;
+    background: rgba(7, 25, 64, 0.35);
+    color: var(--white);
+    padding: 0.65rem 0.8rem;
+    font-family: inherit;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+    outline: 2px solid rgba(56, 189, 248, 0.6);
+    outline-offset: 1px;
+}
+
+.form-field textarea {
+    min-height: 94px;
+    resize: vertical;
+}
+
+.checkbox-field {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding-top: 0.4rem;
+}
+
+.checkbox-field input {
+    width: 18px;
+    height: 18px;
+    padding: 0;
+}
+
+.form-actions {
+    margin-top: 1.2rem;
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+}
+
+.save-message {
+    margin-top: 0.75rem;
+    color: var(--white);
+    font-weight: 600;
+    min-height: 1.1rem;
+}
+
+.save-message.success {
+    color: #b3ffcb;
+}
+
+.save-message.error {
+    color: #ffd4d4;
+}

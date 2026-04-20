@@ -2,7 +2,7 @@
     padding: 1.4rem;
 }
 
-.form-grid {
+.student-add-form .form-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 1rem;
@@ -39,7 +39,9 @@
 }
 
 @media (max-width: 600px) {
-    .form-grid {
+    .student-add-form .form-grid {
+        display: grid;
+        max-width: 100%;
         grid-template-columns: 1fr;
     }
 }

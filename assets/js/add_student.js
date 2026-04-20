@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+const initAddStudentForm = () => {
     const form = document.getElementById("add-student-form");
     const rutaSelect = document.getElementById("ruta_id");
     const becadoInput = document.getElementById("becado");
@@ -68,4 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
     });
-});
+};
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAddStudentForm);
+} else {
+    initAddStudentForm();
+}
