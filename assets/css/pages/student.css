@@ -137,7 +137,6 @@
 }
 
 .scan-warning-banner {
-    width: 100%;
     border-radius: 0.6rem;
     background: rgba(255, 166, 66, 0.95);
     color: #17315e;
@@ -187,6 +186,7 @@
 
 .scanner-modal {
     position: fixed;
+    padding-top: 5rem;
     inset: 0;
     z-index: 40;
     background: rgba(3, 8, 20, 0.75);
@@ -269,7 +269,6 @@
 }
 
 @media (max-width: 600px) {
-
 
     .students-header {
         flex-direction: column;

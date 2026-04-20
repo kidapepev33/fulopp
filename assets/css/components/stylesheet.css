@@ -209,11 +209,6 @@ body .max-width_container {
     max-width: 50%;
 }
 
-body .max-width_container_login {
-    max-width: 30%;
-    padding: 0rem 1.5rem;
-}
-
 /* Reusable UI Blocks */
 .table-wrapper {
     background-color: rgba(255, 255, 255, 0.08);

@@ -28,6 +28,7 @@ $students = [];
 
 if ($result) {
     while ($row = $result->fetch_assoc()) {
+        $row['can_edit'] = ($scope['role'] === 'admin');
         $students[] = $row;
     }
 }

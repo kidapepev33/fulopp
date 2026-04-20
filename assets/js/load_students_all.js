@@ -23,6 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
         .replace(/'/g, "&#39;");
 
     const toSafeText = value => (value === null || value === undefined || value === "") ? "-" : String(value);
+    const canEditStudent = student => {
+        const value = String(student && student.can_edit !== undefined ? student.can_edit : "0").toLowerCase();
+        return value === "1" || value === "true";
+    };
     const toBarcodePath = student => `../assets/images/Qr_student/barcode_${encodeURIComponent(String(student.id ?? ""))}.png`;
     const toBarcodeSvgPath = student => `../assets/images/Qr_student/barcode_${encodeURIComponent(String(student.id ?? ""))}.svg`;
 
@@ -90,7 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <td class="td-seccion" data-label="Seccion">${escapeHtml(toSafeText(student.seccion))}</td>
                 <td class="td-beca" data-label="Becado">${escapeHtml(toBecadoText(student.becado))}</td>
                 <td class="td-qr_barcode" data-label="Codigo barras">${getBarcodeCell(student)}</td>
-                <td data-label="Accion"><a class="action-link" href="student.html?id=${encodeURIComponent(student.id)}">Editar</a></td>
+                <td data-label="Accion">${
+                    canEditStudent(student)
+                        ? `<a class="action-link" href="student.html?id=${encodeURIComponent(student.id)}">Editar</a>`
+                        : `<span>-</span>`
+                }</td>
             </tr>
         `).join("");
     };
