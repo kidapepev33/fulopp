@@ -74,4 +74,3 @@ function ensure_profile_schema(mysqli $conn): void
         $conn->query("ALTER TABLE chofer ADD CONSTRAINT fk_chofer_vehiculo FOREIGN KEY (vehiculo_id) REFERENCES vehiculos(id) ON DELETE SET NULL");
     }
 }
-

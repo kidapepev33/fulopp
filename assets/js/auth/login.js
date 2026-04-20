@@ -1,31 +1,21 @@
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('login-form');
     const toast = window.AppToast;
-    const appPrefix = window.location.pathname.startsWith('/fulopp/') ? '/fulopp' : '';
-    const parseJsonSafely = async response => {
-        const raw = await response.text();
-        try {
-            return JSON.parse(raw);
-        } catch (error) {
-            const preview = raw ? raw.slice(0, 180) : 'respuesta vacia';
-            throw new Error(`Respuesta no valida del servidor (${response.status}): ${preview}`);
-        }
-    };
 
     if (!form) {
         return;
     }
 
     fetch('../../includes/auth/session_status.php', { credentials: 'same-origin' })
-        .then(parseJsonSafely)
+        .then(res => res.json())
         .then(data => {
             if (data && data.logged_in) {
                 const params = new URLSearchParams(window.location.search);
                 const next = params.get('next');
-                if (next && (next.startsWith('/fulopp/') || next.startsWith('/pages/'))) {
+                if (next && next.startsWith('/fulopp/')) {
                     window.location.href = next;
                 } else {
-                    window.location.href = appPrefix + '/pages/rutas.html';
+                    window.location.href = '/fulopp/pages/rutas.html';
                 }
             }
         })
@@ -44,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
             body: formData,
             credentials: 'same-origin'
         })
-            .then(parseJsonSafely)
+            .then(res => res.json())
             .then(result => {
                 if (!result || !result.success) {
                     throw new Error(result && result.message ? result.message : 'No se pudo iniciar sesion');
@@ -52,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const params = new URLSearchParams(window.location.search);
                 const next = params.get('next');
-                const safeNext = next && (next.startsWith('/fulopp/') || next.startsWith('/pages/')) ? next : null;
-                window.location.href = safeNext || result.redirect || (appPrefix + '/pages/rutas.html');
+                const safeNext = next && next.startsWith('/fulopp/') ? next : null;
+                window.location.href = safeNext || result.redirect || '/fulopp/pages/rutas.html';
             })
             .catch(error => {
                 if (toast) {
