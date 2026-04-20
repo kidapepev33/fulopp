@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return JSON.parse(raw);
         } catch (error) {
             const preview = raw ? raw.slice(0, 180) : 'respuesta vacia';
-            throw new Error(`Respuesta no valida del servidor: ${preview}`);
+            throw new Error(`Respuesta no valida del servidor (${response.status}): ${preview}`);
         }
     };
 
