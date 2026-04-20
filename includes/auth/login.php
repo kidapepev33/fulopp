@@ -1,7 +1,7 @@
 <?php
 session_start();
-require_once __DIR__ . '/../../config/server.php';
-require_once __DIR__ . '/../functions/profile_schema.php';
+require_once '../../config/server.php';
+require_once '../functions/profile_schema.php';
 header('Content-Type: application/json; charset=utf-8');
 
 ensure_profile_schema($conn);
@@ -54,5 +54,4 @@ $_SESSION['auth_user'] = [
     'vehiculo_id' => isset($user['vehiculo_id']) ? (int)$user['vehiculo_id'] : null
 ];
 
-echo json_encode(['success' => true, 'redirect' => '/pages/rutas.html']);
-
+echo json_encode(['success' => true, 'redirect' => '/fulopp/pages/rutas.html']);

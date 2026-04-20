@@ -1,18 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("rutas-container");
     const toast = window.AppToast;
-    const parseJsonSafely = async response => {
-        const raw = await response.text();
-        try {
-            return JSON.parse(raw);
-        } catch (error) {
-            const preview = raw ? raw.slice(0, 180) : "respuesta vacia";
-            throw new Error(`Respuesta no valida del servidor: ${preview}`);
-        }
-    };
 
     fetch("../includes/functions/load_routes.php")
-        .then(parseJsonSafely)
+        .then(res => res.json())
         .then(data => {
             if (!Array.isArray(data)) {
                 throw new Error(data && data.message ? data.message : "No se pudieron cargar rutas");

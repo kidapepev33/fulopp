@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../../config/server.php';
-require_once __DIR__ . '/auth_scope.php';
+require_once '../../config/server.php';
+require_once 'auth_scope.php';
 header('Content-Type: application/json; charset=utf-8');
 
 $authUser = require_auth_user();
@@ -36,5 +36,4 @@ if ($result) {
 }
 
 echo json_encode($rutas);
-
 

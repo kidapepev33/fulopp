@@ -85,4 +85,3 @@ function build_in_clause_int(array $values): string
     }
     return implode(',', array_map('intval', $values));
 }
-
