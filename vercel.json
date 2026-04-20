@@ -11,20 +11,20 @@
       "destination": "/pages/index.html"
     },
     {
-      "source": "/includes/functions/:path*",
-      "destination": "/api/functions/:path*"
+      "source": "/includes/functions/:path*.php",
+      "destination": "/api/functions/:path*.php"
     },
     {
-      "source": "/includes/auth/:path*",
-      "destination": "/api/auth/:path*"
+      "source": "/includes/auth/:path*.php",
+      "destination": "/api/auth/:path*.php"
     },
     {
-      "source": "/fulopp/includes/functions/:path*",
-      "destination": "/api/functions/:path*"
+      "source": "/fulopp/includes/functions/:path*.php",
+      "destination": "/api/functions/:path*.php"
     },
     {
-      "source": "/fulopp/includes/auth/:path*",
-      "destination": "/api/auth/:path*"
+      "source": "/fulopp/includes/auth/:path*.php",
+      "destination": "/api/auth/:path*.php"
     },
     {
       "source": "/fulopp/:path*",
