@@ -47,7 +47,17 @@ body {
 
 @media (max-width: 768px) {
     * {
-        font-size: 60%;
+        font-size: 90%;
+    }
+}
+@media (max-width: 636px) {
+    * {
+        font-size: clamp(12px, 60%, 1.2rem);
+    }
+    body .container {
+        max-width: 95%;
+        width: 100%;
+        padding: 1.4rem 1rem;
     }
 }
 
@@ -193,6 +203,15 @@ input:-webkit-autofill:focus {
 
 .margin-center {
     margin: 0 auto;
+}
+
+body .max-width_container {
+    max-width: 50%;
+}
+
+body .max-width_container_login {
+    max-width: 30%;
+    padding: 0rem 1.5rem;
 }
 
 /* Reusable UI Blocks */

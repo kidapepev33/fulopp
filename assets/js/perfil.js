@@ -101,7 +101,6 @@ const initPerfilPage = () => {
                     '<td data-label="Placa">{{placa}}</td>',
                     '<td data-label="Capacidad">{{capacidad}}</td>',
                     '<td data-label="Estado">{{estado}}</td>',
-                    '<td data-label="Chofer asignado">{{chofer_asignado}}</td>',
                     '<td data-label="Accion"><button type="button" class="action-link action-button edit-vehicle-go" data-vehicle-id="{{id}}">Editar</button></td>',
                     "</tr>"
                 ].join("");
@@ -236,19 +235,17 @@ const initPerfilPage = () => {
     const renderVehiclesList = () => {
         if (!vehiclesTableBody) return;
         if (!Array.isArray(latestData.vehicles) || latestData.vehicles.length === 0) {
-            vehiclesTableBody.innerHTML = '<tr class="table-placeholder"><td colspan="6">No hay vehiculos registrados</td></tr>';
+            vehiclesTableBody.innerHTML = '<tr class="table-placeholder"><td colspan="5">No hay vehiculos registrados</td></tr>';
             return;
         }
 
         vehiclesTableBody.innerHTML = latestData.vehicles.map(vehicle => {
-            const assigned = String(vehicle.assigned_driver_name || "").trim();
             const status = isMaintenance(vehicle.estado) ? "Mantenimiento" : "Activo";
             return vehicleRowTemplate
                 .replace("{{codigo_interno}}", escapeHtml(vehicle.codigo_interno))
                 .replace("{{placa}}", escapeHtml(vehicle.placa))
                 .replace("{{capacidad}}", escapeHtml(vehicle.capacidad))
                 .replace("{{estado}}", escapeHtml(status))
-                .replace("{{chofer_asignado}}", escapeHtml(assigned || "Sin asignar"))
                 .replace("{{id}}", escapeHtml(vehicle.id));
         }).join("");
 

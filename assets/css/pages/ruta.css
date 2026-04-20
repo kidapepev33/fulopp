@@ -48,20 +48,7 @@
     outline-offset: 2px;
 }
 
-@media (max-width: 900px) {
-    .container {
-        width: min(960px, 94%);
-        padding: 2rem 1.6rem 2.2rem;
-    }
-}
-
 @media (max-width: 600px) {
-    .container {
-        width: min(720px, 94%);
-        padding: 1.6rem 1.2rem 1.8rem;
-        border-radius: 1rem;
-    }
-
     #rutas-container,
     #students-container {
         grid-template-columns: 1fr;
